@@ -128,19 +128,24 @@ class POS(TokenClassificationTask):
 
     def write_predictions_to_file(self, writer: TextIO, test_input_reader: TextIO, preds_list: List):
         example_id = 0
+        error = 0
         # print("input: ", test_input_reader)  # test.txt
         # print("list: ", preds_list)  # lista di liste che contiene tutti i PoS tag per ogni frase in test.txt
         for sentence in parse_incr(test_input_reader):
             s_p = preds_list[example_id]  # [['VERB', 'DET', 'PROPN', 'PROPN', 'PUNCT'],
-            print("sentence: ", sentence)
-            print("s_p: ", s_p)
-            out = ""
-            for token in sentence:
-                print("token: ", token)
-                out += f'{token["form"]} ({token["upos"]}|{s_p.pop(0)}) '
-            out += "\n"
-            writer.write(out)
+            if len(sentence) == len(s_p):
+                out = ""
+                for token in sentence:
+                    out += f'{token["form"]} ({token["upos"]}|{s_p.pop(0)}) '
+                out += "\n"
+                writer.write(out)
+            else:
+                error += 1
             example_id += 1
+        assert error == 1
+        # it_isdt-ud-test.txt
+        # text = Salvo che sia espressamente convenuto altrimenti per iscritto fra le parti, il Licenziante offre l'opera in licenza "così com'è" e non fornisce alcuna dichiarazione o garanzia di qualsiasi tipo con riguardo all'opera, sia essa espressa od implicita, di fonte legale o di altro tipo, essendo quindi escluse, fra le altre, le garanzie relative al titolo, alla commerciabilità, all'idoneità per un fine specifico e alla non violazione di diritti di terzi o alla mancanza di difetti latenti o di altro tipo, all'esattezza od alla presenza di errori, siano essi accertabili o meno.
+
 
     def get_labels(self, path: str) -> List[str]:
         if path:
