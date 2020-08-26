@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # Output model dir
-transformrs-pat-model/
+transformers-pat-model
 
 # Cached files
 cached*
