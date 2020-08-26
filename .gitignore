@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Output model dir
+transformrs-pat-model/
+
+# Cached files
+cached*
+
+# Dataset .txt
+*.txt
