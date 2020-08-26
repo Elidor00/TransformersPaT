@@ -59,5 +59,25 @@ python3 run_ner.py \
 
 ```
 
+### Results
 
- 
+#### PoS-tagging
+
+##### Eval results 
+```
+eval_loss = 0.12719589757772398
+eval_accuracy_score = 0.9656533422908968
+eval_precision = 0.9609080550442634
+eval_recall = 0.9612450679526523
+eval_f1 = 0.9610765319540634
+epoch = 3.0
+```
+
+##### Running prediction
+```
+eval_loss = 0.10841419372219042
+eval_accuracy_score = 0.9673485066743494
+eval_precision = 0.962717979555021
+eval_recall = 0.9632972322503008
+eval_f1 = 0.963007518796992
+```
