@@ -45,6 +45,7 @@ class InputExample:
     guid: str
     words: List[str]
     labels: Optional[List[str]]
+    head: Optional[List[str]]
 
 
 @dataclass
@@ -104,6 +105,7 @@ class TokenClassificationTask:
 
         features = []
         for (ex_index, example) in enumerate(examples):
+            # examples = List[head list, labels list, words list]
             # if ex_index % 10_000 == 0:
             #     logger.info("Writing example %d of %d", ex_index, len(examples))
 
