@@ -230,4 +230,13 @@ class PARSING(TokenClassificationTask):
             with open(path, "r") as f:
                 return f.read().splitlines()
         else:
-            return self.labels
+            if bool(self.labels):
+                return self.labels
+            else:
+                return \
+                    ['mark', 'obl:agent', 'aux', 'amod', 'case', 'det', 'cop', 'expl', 'orphan', 'expl:impers', 'fixed',
+             'acl:relcl', 'flat:name', 'advmod', 'nsubj', 'dislocated', 'ccomp', 'flat', 'flat:foreign', 'aux:pass',
+             'obl', 'vocative', 'parataxis', 'expl:pass', 'compound', 'punct', 'appos', 'det:predet', 'csubj:pass',
+             'advcl', 'xcomp', 'csubj', 'root', 'discourse', 'nsubj:pass', 'det:poss', 'nummod', 'conj', 'iobj', 'acl',
+             'obj', 'dep', 'nmod', 'cc']
+

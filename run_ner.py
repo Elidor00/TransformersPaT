@@ -148,6 +148,8 @@ def main():
     # Set seed
     set_seed(training_args.seed)
 
+    # TODO: create token_classification_task.set_labels(...) to avoid having to specify them all in a list
+
     # Prepare CONLL-2003 task
     labels = token_classification_task.get_labels(data_args.labels)
     label_map: Dict[int, str] = {i: label for i, label in enumerate(labels)}
