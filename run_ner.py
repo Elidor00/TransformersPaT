@@ -107,6 +107,8 @@ def main():
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
+    training_args.output_dir = training_args.output_dir + "-" + model_args.task_type
+
     if (
         os.path.exists(training_args.output_dir)
         and os.listdir(training_args.output_dir)
