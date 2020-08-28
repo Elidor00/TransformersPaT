@@ -173,9 +173,8 @@ class POS(TokenClassificationTask):
             ]
 
 
-class PARSING(TokenClassificationTask):
+class DEPREL(TokenClassificationTask):
     def __init__(self, labels=None):
-        # in NER datasets, the last column is usually reserved for NER label
         if labels is None:
             labels = set()
         self.labels = labels
@@ -191,16 +190,10 @@ class PARSING(TokenClassificationTask):
         with open(file_path, encoding="utf-8") as f:
             for sentence in parse_incr(f):
                 words = []
-                labels = []
-                head = []
                 for token in sentence:
                     words.append(token["form"])
-                    labels.append(token["deprel"])
-                    head.append(token["head"])
-                    self.labels.add(token["deprel"])
-                assert len(words) == len(labels) == len(head)
                 if words:
-                    examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=labels, head=head))
+                    examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=self.labels))
                     guid_index += 1
         return examples
 
@@ -224,19 +217,19 @@ class PARSING(TokenClassificationTask):
         # it_isdt-ud-test.txt
         # text = Salvo che sia espressamente convenuto altrimenti per iscritto fra le parti, il Licenziante offre l'opera in licenza "così com'è" e non fornisce alcuna dichiarazione o garanzia di qualsiasi tipo con riguardo all'opera, sia essa espressa od implicita, di fonte legale o di altro tipo, essendo quindi escluse, fra le altre, le garanzie relative al titolo, alla commerciabilità, all'idoneità per un fine specifico e alla non violazione di diritti di terzi o alla mancanza di difetti latenti o di altro tipo, all'esattezza od alla presenza di errori, siano essi accertabili o meno.
 
+    def set_labels(self, data_dir: str, mode: Union[Split, str]):
+        for file in mode:
+            print("Extracting labels from: ", file.value)
+            file_path = os.path.join(data_dir, f"{file.value}.txt")
+            with open(file_path, encoding="utf-8") as f:
+                for sentence in parse_incr(f):
+                    for token in sentence:
+                        self.labels.add(token["deprel"])
 
     def get_labels(self, path: str) -> Union[List[str], dict]:
-        if path:
+        if path and self.labels == 0:
             with open(path, "r") as f:
                 return f.read().splitlines()
         else:
-            if bool(self.labels):
-                return self.labels
-            else:
-                return \
-                    ['mark', 'obl:agent', 'aux', 'amod', 'case', 'det', 'cop', 'expl', 'orphan', 'expl:impers', 'fixed',
-             'acl:relcl', 'flat:name', 'advmod', 'nsubj', 'dislocated', 'ccomp', 'flat', 'flat:foreign', 'aux:pass',
-             'obl', 'vocative', 'parataxis', 'expl:pass', 'compound', 'punct', 'appos', 'det:predet', 'csubj:pass',
-             'advcl', 'xcomp', 'csubj', 'root', 'discourse', 'nsubj:pass', 'det:poss', 'nummod', 'conj', 'iobj', 'acl',
-             'obj', 'dep', 'nmod', 'cc']
+            return self.labels
 
