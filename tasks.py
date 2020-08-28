@@ -190,10 +190,14 @@ class DEPREL(TokenClassificationTask):
         with open(file_path, encoding="utf-8") as f:
             for sentence in parse_incr(f):
                 words = []
+                labels = []
                 for token in sentence:
                     words.append(token["form"])
+                    labels.append(token["deprel"])
+                assert len(words) == len(labels)
                 if words:
-                    examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=self.labels))
+                    # Create all the examples for token classification (train and test) with the correlating features
+                    examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=labels))
                     guid_index += 1
         return examples
 
@@ -218,6 +222,9 @@ class DEPREL(TokenClassificationTask):
         # text = Salvo che sia espressamente convenuto altrimenti per iscritto fra le parti, il Licenziante offre l'opera in licenza "così com'è" e non fornisce alcuna dichiarazione o garanzia di qualsiasi tipo con riguardo all'opera, sia essa espressa od implicita, di fonte legale o di altro tipo, essendo quindi escluse, fra le altre, le garanzie relative al titolo, alla commerciabilità, all'idoneità per un fine specifico e alla non violazione di diritti di terzi o alla mancanza di difetti latenti o di altro tipo, all'esattezza od alla presenza di errori, siano essi accertabili o meno.
 
     def set_labels(self, data_dir: str, mode: Union[Split, str]):
+        """
+        set the set of labels for prediction
+        """
         for file in mode:
             print("Extracting labels from: ", file.value)
             file_path = os.path.join(data_dir, f"{file.value}.txt")
@@ -227,6 +234,9 @@ class DEPREL(TokenClassificationTask):
                         self.labels.add(token["deprel"])
 
     def get_labels(self, path: str) -> Union[List[str], dict]:
+        """
+        get the set of labels to predict
+        """
         if path and self.labels == 0:
             with open(path, "r") as f:
                 return f.read().splitlines()
