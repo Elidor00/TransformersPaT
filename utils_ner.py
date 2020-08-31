@@ -103,6 +103,7 @@ class TokenClassificationTask:
         print("label_map ", label_map)
 
         features = []
+        max_length = 0
         for (ex_index, example) in enumerate(examples):
             # examples = List[labels list, words list]
             # if ex_index % 10_000 == 0:
@@ -112,6 +113,11 @@ class TokenClassificationTask:
             label_ids = []
             for word, label in zip(example.words, example.labels):
                 word_tokens = tokenizer.tokenize(word)
+
+                # if label > 60:
+                #     print("label: ", label)
+                #     print("word: ", word)
+                #     print("example: ", example)
 
                 # bert-base-multilingual-cased sometimes output "nothing ([]) when calling tokenize with just a space.
                 if len(word_tokens) > 0:
