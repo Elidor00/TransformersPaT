@@ -102,3 +102,24 @@ eval_precision = 0.9188105252861195
 eval_recall = 0.9169269816477938
 eval_f1 = 0.91786778716959
 ```
+
+#### task_type: RELPOS (Relative Position between head and id)
+
+##### Eval results 
+```
+eval_loss = 0.7054957197585576
+eval_accuracy_score = 0.7948438024857238
+eval_precision = 0.7775862068965518
+eval_recall = 0.7679003494936822
+eval_f1 = 0.7727129266423194
+epoch = 3.0
+```
+
+##### Test results
+```
+eval_loss = 0.6385571194476769
+eval_accuracy_score = 0.8070680879669644
+eval_precision = 0.7904142134077058
+eval_recall = 0.7806570087737197
+eval_f1 = 0.785505312323564
+```
