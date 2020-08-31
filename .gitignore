@@ -136,3 +136,6 @@ cached*
 
 # Dataset .txt
 *.txt
+
+# .idea files
+.idea/
