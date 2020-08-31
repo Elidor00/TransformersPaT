@@ -61,23 +61,44 @@ python3 run_ner.py \
 
 ### Results
 
-#### PoS-tagging
+#### task_type: POS (PoS-tagging)
 
 ##### Eval results 
 ```
-eval_loss = 0.12719589757772398
-eval_accuracy_score = 0.9656533422908968
-eval_precision = 0.9609080550442634
-eval_recall = 0.9612450679526523
-eval_f1 = 0.9610765319540634
+eval_loss = 0.12940883628604277
+eval_accuracy_score = 0.9644776620759153
+eval_precision = 0.9595684967549553
+eval_recall = 0.9593160894344586
+eval_f1 = 0.9594422764940589
 epoch = 3.0
 ```
 
-##### Running prediction
+##### Test results
 ```
-eval_loss = 0.10841419372219042
-eval_accuracy_score = 0.9673485066743494
-eval_precision = 0.962717979555021
-eval_recall = 0.9632972322503008
-eval_f1 = 0.963007518796992
+eval_loss = 0.10366534093226933
+eval_accuracy_score = 0.968596946125036
+eval_precision = 0.9643250826736146
+eval_recall = 0.965002005615724
+eval_f1 = 0.964663425392211
+```
+
+#### task_type: DEPREL (Universal Dependency Relations)
+
+##### Eval results 
+```
+eval_loss = 0.2931467722839033
+eval_accuracy_score = 0.9117400067181727
+eval_precision = 0.9091454016098647
+eval_recall = 0.9070482699700982
+eval_f1 = 0.9080956250267288
+epoch = 3.0
+```
+
+##### Test results
+```
+eval_loss = 0.2617744687395018
+eval_accuracy_score = 0.9213483146067416
+eval_precision = 0.9188105252861195
+eval_recall = 0.9169269816477938
+eval_f1 = 0.91786778716959
 ```

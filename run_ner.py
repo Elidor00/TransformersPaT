@@ -107,6 +107,8 @@ def main():
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
+    training_args.output_dir = training_args.output_dir + "-" + model_args.task_type
+
     if (
         os.path.exists(training_args.output_dir)
         and os.listdir(training_args.output_dir)
@@ -146,6 +148,10 @@ def main():
     # Set seed
     set_seed(training_args.seed)
 
+    # Set labels only for DEPREL and DELTA
+    if model_args.task_type == "DEPREL":
+        token_classification_task.set_labels(data_args.data_dir, Split)
+
     # Prepare CONLL-2003 task
     labels = token_classification_task.get_labels(data_args.labels)
     label_map: Dict[int, str] = {i: label for i, label in enumerate(labels)}
@@ -176,7 +182,7 @@ def main():
         cache_dir=model_args.cache_dir,
     )
 
-    print(model)  # BERT 12 layer + MLP output layer for fine-tuning
+    # print(model)  # BERT 12 layer + MLP output layer for fine-tuning
 
     # Get datasets
     train_dataset = (

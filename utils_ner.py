@@ -104,6 +104,7 @@ class TokenClassificationTask:
 
         features = []
         for (ex_index, example) in enumerate(examples):
+            # examples = List[labels list, words list]
             # if ex_index % 10_000 == 0:
             #     logger.info("Writing example %d of %d", ex_index, len(examples))
 
@@ -183,14 +184,14 @@ class TokenClassificationTask:
             assert len(segment_ids) == max_seq_length
             assert len(label_ids) == max_seq_length
 
-            # if ex_index < 5:
-            #     logger.info("*** Example ***")
-            #     logger.info("guid: %s", example.guid)
-            #     logger.info("tokens: %s", " ".join([str(x) for x in tokens]))
-            #     logger.info("input_ids: %s", " ".join([str(x) for x in input_ids]))
-            #     logger.info("input_mask: %s", " ".join([str(x) for x in input_mask]))
-            #     logger.info("segment_ids: %s", " ".join([str(x) for x in segment_ids]))
-            #     logger.info("label_ids: %s", " ".join([str(x) for x in label_ids]))
+            if ex_index < 5:
+                logger.info("*** Example ***")
+                logger.info("guid: %s", example.guid)
+                logger.info("tokens: %s", " ".join([str(x) for x in tokens]))
+                logger.info("input_ids: %s", " ".join([str(x) for x in input_ids]))
+                logger.info("input_mask: %s", " ".join([str(x) for x in input_mask]))
+                logger.info("segment_ids: %s", " ".join([str(x) for x in segment_ids]))
+                logger.info("label_ids: %s", " ".join([str(x) for x in label_ids]))
 
             if "token_type_ids" not in tokenizer.model_input_names:
                 segment_ids = None
@@ -266,103 +267,6 @@ if is_torch_available():
                     )
                     logger.info(f"Saving features into cached file {cached_features_file}")
                     torch.save(self.features, cached_features_file)
-
-        def __len__(self):
-            return len(self.features)
-
-        def __getitem__(self, i) -> InputFeatures:
-            return self.features[i]
-
-
-if is_tf_available():
-    import tensorflow as tf
-
-    class TFNerDataset:
-        """
-        This will be superseded by a framework-agnostic approach
-        soon.
-        """
-
-        features: List[InputFeatures]
-        pad_token_label_id: int = -100
-        # Use cross entropy ignore_index as padding label id so that only
-        # real label ids contribute to the loss later.
-
-        def __init__(
-            self,
-            token_classification_task: TokenClassificationTask,
-            data_dir: str,
-            tokenizer: PreTrainedTokenizer,
-            labels: List[str],
-            model_type: str,
-            max_seq_length: Optional[int] = None,
-            overwrite_cache=False,
-            mode: Split = Split.train,
-        ):
-            examples = token_classification_task.read_examples_from_file(data_dir, mode)
-            # TODO clean up all this to leverage built-in features of tokenizers
-            self.features = token_classification_task.convert_examples_to_features(
-                examples,
-                labels,
-                max_seq_length,
-                tokenizer,
-                cls_token_at_end=bool(model_type in ["xlnet"]),
-                # xlnet has a cls token at the end
-                cls_token=tokenizer.cls_token,
-                cls_token_segment_id=2 if model_type in ["xlnet"] else 0,
-                sep_token=tokenizer.sep_token,
-                sep_token_extra=False,
-                # roberta uses an extra separator b/w pairs of sentences, cf. github.com/pytorch/fairseq/commit/1684e166e3da03f5b600dbb7855cb98ddfcd0805
-                pad_on_left=bool(tokenizer.padding_side == "left"),
-                pad_token=tokenizer.pad_token_id,
-                pad_token_segment_id=tokenizer.pad_token_type_id,
-                pad_token_label_id=self.pad_token_label_id,
-            )
-
-            def gen():
-                for ex in self.features:
-                    if ex.token_type_ids is None:
-                        yield (
-                            {"input_ids": ex.input_ids, "attention_mask": ex.attention_mask},
-                            ex.label_ids,
-                        )
-                    else:
-                        yield (
-                            {
-                                "input_ids": ex.input_ids,
-                                "attention_mask": ex.attention_mask,
-                                "token_type_ids": ex.token_type_ids,
-                            },
-                            ex.label_ids,
-                        )
-
-            if "token_type_ids" not in tokenizer.model_input_names:
-                self.dataset = tf.data.Dataset.from_generator(
-                    gen,
-                    ({"input_ids": tf.int32, "attention_mask": tf.int32}, tf.int64),
-                    (
-                        {"input_ids": tf.TensorShape([None]), "attention_mask": tf.TensorShape([None])},
-                        tf.TensorShape([None]),
-                    ),
-                )
-            else:
-                self.dataset = tf.data.Dataset.from_generator(
-                    gen,
-                    ({"input_ids": tf.int32, "attention_mask": tf.int32, "token_type_ids": tf.int32}, tf.int64),
-                    (
-                        {
-                            "input_ids": tf.TensorShape([None]),
-                            "attention_mask": tf.TensorShape([None]),
-                            "token_type_ids": tf.TensorShape([None]),
-                        },
-                        tf.TensorShape([None]),
-                    ),
-                )
-
-        def get_dataset(self):
-            self.dataset = self.dataset.apply(tf.data.experimental.assert_cardinality(len(self.features)))
-
-            return self.dataset
 
         def __len__(self):
             return len(self.features)

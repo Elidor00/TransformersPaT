@@ -35,7 +35,7 @@ else
 fi
 
 python3 run_ner.py \
---task_type POS \
+--task_type DEPREL \
 --data_dir . \
 --model_name_or_path $BERT_MODEL \
 --output_dir $OUTPUT_DIR \

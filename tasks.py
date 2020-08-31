@@ -173,3 +173,73 @@ class POS(TokenClassificationTask):
             ]
 
 
+class DEPREL(TokenClassificationTask):
+    def __init__(self, labels=None):
+        if labels is None:
+            labels = set()
+        self.labels = labels
+
+
+    def read_examples_from_file(self, data_dir, mode: Union[Split, str]) -> List[InputExample]:
+        if isinstance(mode, Split):
+            mode = mode.value
+        file_path = os.path.join(data_dir, f"{mode}.txt")
+        guid_index = 1
+        examples = []
+
+        with open(file_path, encoding="utf-8") as f:
+            for sentence in parse_incr(f):
+                words = []
+                labels = []
+                for token in sentence:
+                    words.append(token["form"])
+                    labels.append(token["deprel"])
+                assert len(words) == len(labels)
+                if words:
+                    # Create all the examples for token classification (train and test) with the correlating features
+                    examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=labels))
+                    guid_index += 1
+        return examples
+
+    def write_predictions_to_file(self, writer: TextIO, test_input_reader: TextIO, preds_list: List):
+        example_id = 0
+        error = 0
+        # print("input: ", test_input_reader)  # test.txt
+        # print("list: ", preds_list)  # lista di liste che contiene tutti i PoS tag per ogni frase in test.txt
+        for sentence in parse_incr(test_input_reader):
+            s_p = preds_list[example_id]  # [['VERB', 'DET', 'PROPN', 'PROPN', 'PUNCT'],
+            if len(sentence) == len(s_p):
+                out = ""
+                for token in sentence:
+                    out += f'{token["form"]} ({token["upos"]}|{s_p.pop(0)}) '
+                out += "\n"
+                writer.write(out)
+            else:
+                error += 1
+            example_id += 1
+        assert error == 1
+        # it_isdt-ud-test.txt
+        # text = Salvo che sia espressamente convenuto altrimenti per iscritto fra le parti, il Licenziante offre l'opera in licenza "così com'è" e non fornisce alcuna dichiarazione o garanzia di qualsiasi tipo con riguardo all'opera, sia essa espressa od implicita, di fonte legale o di altro tipo, essendo quindi escluse, fra le altre, le garanzie relative al titolo, alla commerciabilità, all'idoneità per un fine specifico e alla non violazione di diritti di terzi o alla mancanza di difetti latenti o di altro tipo, all'esattezza od alla presenza di errori, siano essi accertabili o meno.
+
+    def set_labels(self, data_dir: str, mode: Union[Split, str]):
+        """
+        set the set of labels for prediction
+        """
+        for file in mode:
+            print("Extracting labels from: ", file.value)
+            file_path = os.path.join(data_dir, f"{file.value}.txt")
+            with open(file_path, encoding="utf-8") as f:
+                for sentence in parse_incr(f):
+                    for token in sentence:
+                        self.labels.add(token["deprel"])
+
+    def get_labels(self, path: str) -> Union[List[str], dict]:
+        """
+        get the set of labels to predict
+        """
+        if path and self.labels == 0:
+            with open(path, "r") as f:
+                return f.read().splitlines()
+        else:
+            return self.labels
+
