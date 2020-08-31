@@ -235,7 +235,7 @@ class DEPREL(TokenClassificationTask):
 
     def get_labels(self, path: str) -> Union[List[str], dict]:
         """
-        get the set of labels to predict
+        get the setted labels to predict
         """
         if path and self.labels == 0:
             with open(path, "r") as f:
@@ -251,6 +251,10 @@ class RELPOS(TokenClassificationTask):
 
     max sentence length = 310
     """
+    def __init__(self, labels=None):
+        if labels is None:
+            labels = set()
+        self.labels = labels
 
     def read_examples_from_file(self, data_dir, mode: Union[Split, str]) -> List[InputExample]:
         if isinstance(mode, Split):
@@ -293,11 +297,28 @@ class RELPOS(TokenClassificationTask):
         # it_isdt-ud-test.txt
         # text = Salvo che sia espressamente convenuto altrimenti per iscritto fra le parti, il Licenziante offre l'opera in licenza "così com'è" e non fornisce alcuna dichiarazione o garanzia di qualsiasi tipo con riguardo all'opera, sia essa espressa od implicita, di fonte legale o di altro tipo, essendo quindi escluse, fra le altre, le garanzie relative al titolo, alla commerciabilità, all'idoneità per un fine specifico e alla non violazione di diritti di terzi o alla mancanza di difetti latenti o di altro tipo, all'esattezza od alla presenza di errori, siano essi accertabili o meno.
 
+    def set_labels(self, data_dir: str, mode: Union[Split, str]):
+        """
+        set the set of labels for prediction
+        """
+        for file in mode:
+            print("Extracting labels from: ", file.value)
+            file_path = os.path.join(data_dir, f"{file.value}.txt")
+            with open(file_path, encoding="utf-8") as f:
+                for sentence in parse_incr(f):
+                    for token in sentence:
+                        self.labels.add(0 if token["head"] == 0 else token["head"] - token["id"])
+
     def get_labels(self, path: str) -> List[str]:
+        """
+        get the setted labels to predict
+        """
         if path:
             with open(path, "r") as f:
                 return f.read().splitlines()
         else:
             # delta for relative position from -50 to 50 (english UD - PaT original article)
-            return list(range(-310, 145))
-            # TODO: It would probably be better to create a set_labels function
+            # 0 -> 80, 137, 140 ... -1 -> -150, others 17 from -151 to -307
+            # tot. labels = 203
+            # return list(range(-310, 145))
+            return self.labels
