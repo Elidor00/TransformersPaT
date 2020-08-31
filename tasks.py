@@ -269,7 +269,7 @@ class RELPOS(TokenClassificationTask):
                 labels = []
                 for token in sentence:
                     words.append(token["form"])
-                    labels.append(0 if token["head"] == 0 else token["head"] - token["id"])
+                    labels.append('0' if token["head"] == 0 else str(token["head"] - token["id"]))
                 assert len(words) == len(labels)
                 if words:
                     examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=labels))
@@ -307,7 +307,8 @@ class RELPOS(TokenClassificationTask):
             with open(file_path, encoding="utf-8") as f:
                 for sentence in parse_incr(f):
                     for token in sentence:
-                        self.labels.add(0 if token["head"] == 0 else token["head"] - token["id"])
+                        # labels must have str type
+                        self.labels.add('0' if token["head"] == 0 else str(token["head"] - token["id"]))
 
     def get_labels(self, path: str) -> List[str]:
         """
@@ -320,5 +321,6 @@ class RELPOS(TokenClassificationTask):
             # delta for relative position from -50 to 50 (english UD - PaT original article)
             # 0 -> 80, 137, 140 ... -1 -> -150, others 17 from -151 to -307
             # tot. labels = 203
-            # return list(range(-310, 145))
+            # result = list(range(-310, 145))
+            # return list(map(str, result))
             return self.labels
