@@ -148,12 +148,12 @@ def main():
     # Set seed
     set_seed(training_args.seed)
 
-    # Set labels only for DEPREL and DELTA (RELPOS)
-    if model_args.task_type == "DEPREL" or model_args.task_type == "RELPOS":
+    # Set labels only for DEPREL, DELTA (RELPOS), PARSING
+    if model_args.task_type == "DEPREL" or model_args.task_type == "RELPOS" or model_args.task_type == "PARSING":
         token_classification_task.set_labels(data_args.data_dir, Split)
 
     # Prepare CONLL-2003 task
-    labels = token_classification_task.get_labels(data_args.labels)  # 203 labels
+    labels = token_classification_task.get_labels(data_args.labels)
     label_map: Dict[int, str] = {i: label for i, label in enumerate(labels)}
     num_labels = len(labels)
 
