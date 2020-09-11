@@ -134,8 +134,8 @@ transformers-pat-model-*
 # Cached files
 cached*
 
-# Dataset .txt
-*.txt
+# Dataset italian UD
+it_isdt-ud-*.txt
 
 # .idea files
 .idea/
