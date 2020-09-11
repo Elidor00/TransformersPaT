@@ -34,8 +34,10 @@ else
     fi
 fi
 
+# --task_type POS DEPREL RELPOS
+
 python3 run_ner.py \
---task_type PARSING \
+--task_type DEPREL \
 --data_dir . \
 --model_name_or_path $BERT_MODEL \
 --output_dir $OUTPUT_DIR \
