@@ -34,7 +34,7 @@ else
     fi
 fi
 
-# --task_type POS DEPREL RELPOS
+# --task_type: POS DEPREL RELPOS
 
 python3 run_ner.py \
 --task_type DEPREL \
