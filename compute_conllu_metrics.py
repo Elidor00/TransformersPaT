@@ -1,17 +1,28 @@
 """
 Labeled attachment score (LAS):
-- è la percentuale delle parole predette che hanno la stessa etichetta e testa della relazione di dipendenza di riferimento
+- percentage of the predicted words that have the same label and head as the reference dependency relationship
 Unlabeled attachment score (UAS):
-- è la percentuale delle parole predette che hanno la stessa testa della relazione di dipendenza di riferimento
+- percentage of predicted words that have the same head as the reference dependency relationship
 Label accuracy score:
-- è la percentuale delle parole predette che hanno la stessa etichetta della relazione di dipendenza di riferimento (DEPREL-tag, penso)
+- percentage of predicted words that have the same label as the reference dependency relationship
 """
 import os
 
 
+def write_metrics_to_file(res, path):
+    try:
+        with open(path + "conllu_metrics.txt", "w") as writer:
+            for key, value in res.items():
+                if key == "las" or key == "uas" or key == "label_acc":
+                    writer.write(str(key) + " " + str(value) + " %" + "\n")
+                else:
+                    writer.write(str(key) + " " + str(value) + "\n")
+    except IOError as e:
+        print("({})".format(e))
+
+
 def compute_conllu_metrics(path, tasks_type):
-    las, uas, label_acc, total = 0.0, 0.0, 0.0, 0.0
-    punct = 0
+    res = {"las": 0.0, "uas": 0.0, "label_acc": 0.0, "total": 0, "punct": 0}
     try:
         with open(os.path.join(path, "test_predictions_" + tasks_type[0] + ".txt")) as f1_deprel, \
                 open(os.path.join(path, "test_predictions_" + tasks_type[1] + ".txt")) as f2_relpos:
@@ -20,49 +31,45 @@ def compute_conllu_metrics(path, tasks_type):
                 line_file2 = f2_relpos.readline()
                 if not line_file1:
                     break
-                # print(line_file1.split(" "), line_file2.split(" "))  # ['Evacuata', '(acl|root)', 'la', '(det|det)', 'Tate', '(root|obj)', 'Gallery', '(flat:name|flat:name)', '.', '(punct|punct)', '\n'] ['Evacuata', '(2|0)', 'la', '(1|1)', 'Tate', '(0|-2)', 'Gallery', '(-1|-1)', '.', '(-2|-4)', '\n']
                 elements_file1 = line_file1.split(" ")[1::2]  # odd elements  ['(acl|root)', '(det|det)', '(root|obj)', '(flat:name|flat:name)', '(punct|punct)']
                 elements_file2 = line_file2.split(" ")[1::2]  # odd elements  ['(2|0)', '(1|1)', '(0|-2)', '(-1|-1)', '(-2|-4)']
                 assert len(elements_file1) == len(elements_file2)
-                # print(elements_file1)
-                # print(elements_file2)
                 for el in zip(elements_file1, elements_file2):  # ('(acl|root)', '(2|0)')
-                    # print(el)
                     el_deprel = el[0].replace('(', '').replace(')', '').split("|")
                     el_relpos = el[1].replace('(', '').replace(')', '').split("|")
-                    # print(el_deprel)  # (acl|root)
-                    # print(el_relpos)  # (2|0)
                     if el_deprel[0] == "punct":
-                        punct += 1
+                        # count number of "punct" label
+                        res["punct"] += 1
                     if el_deprel[0] == el_deprel[1] and el_relpos[0] == el_relpos[1]:
                         # same label and head's relative position
-                        las += 1
+                        res["las"] += 1
                     if el_deprel[0] == el_deprel[1]:
                         # same label
-                        label_acc += 1
+                        res["label_acc"] += 1
                     if el_relpos[0] == el_relpos[1]:
                         # same head's relative position
-                        uas += 1
-                    total += 1
+                        res["uas"] += 1
+                    res["total"] += 1
     except IOError as e:
         print("({})".format(e))
-    print("las: ", las, " / ", total)
-    print("uas: ", uas, " / ", total)
-    print("label_acc: ", label_acc, " / ", total)
-    print(punct)
-    las_score = (las/total) * 100
-    uas_score = (uas / total) * 100
-    label_acc_score = (label_acc / total) * 100
-    # in total non è contata una frase da 117: 10417 sono in totale di cui 1162 (senza quella da 117) di punct
-    return las_score, uas_score, label_acc_score, total
+    print("las: ", res["las"], " / ", res["total"])
+    print("uas: ", res["uas"], " / ", res["total"])
+    print("label_acc: ", res["label_acc"], " / ", res["total"])
+    print("punct label: ", res["punct"])
+    # in total non è contata una frase da 117: 10417 sono in totale di cui 1162 (senza contare quelle nella frase da 117) di punct
+    return res
 
 
 def main():
-    las, uas, label_acc_score, total = compute_conllu_metrics(path="results/", tasks_type=["DEPREL", "RELPOS"])
+    res = compute_conllu_metrics(path="results/", tasks_type=["DEPREL", "RELPOS"])
     print("------------------------------------------------------------")
-    print("las = ", las, "%")
-    print("uas (relpos) = ", uas, "%")
-    print("label accuracy score (deprel) = ", label_acc_score, "%")
+    res["las"] = (res["las"] / res["total"]) * 100
+    res["uas"] = (res["uas"] / res["total"]) * 100
+    res["label_acc"] = (res["label_acc"] / res["total"]) * 100
+    print("las = ", res["las"], "%")
+    print("uas (relpos) = ", res["uas"], "%")
+    print("label accuracy score (deprel) = ", res["label_acc"], "%")
+    write_metrics_to_file(res, path="results/")
 
 
 if __name__ == "__main__":
