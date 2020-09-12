@@ -6,7 +6,6 @@ from conllu import parse_incr
 
 from utils_ner import InputExample, Split, TokenClassificationTask
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -146,7 +145,6 @@ class POS(TokenClassificationTask):
         # it_isdt-ud-test.txt
         # text = Salvo che sia espressamente convenuto altrimenti per iscritto fra le parti, il Licenziante offre l'opera in licenza "così com'è" e non fornisce alcuna dichiarazione o garanzia di qualsiasi tipo con riguardo all'opera, sia essa espressa od implicita, di fonte legale o di altro tipo, essendo quindi escluse, fra le altre, le garanzie relative al titolo, alla commerciabilità, all'idoneità per un fine specifico e alla non violazione di diritti di terzi o alla mancanza di difetti latenti o di altro tipo, all'esattezza od alla presenza di errori, siano essi accertabili o meno.
 
-
     def get_labels(self, path: str) -> List[str]:
         if path:
             with open(path, "r") as f:
@@ -178,7 +176,6 @@ class DEPREL(TokenClassificationTask):
         if labels is None:
             labels = set()
         self.labels = labels
-
 
     def read_examples_from_file(self, data_dir, mode: Union[Split, str]) -> List[InputExample]:
         if isinstance(mode, Split):
@@ -251,6 +248,7 @@ class RELPOS(TokenClassificationTask):
 
     max sentence length = 310
     """
+
     def __init__(self, labels=None):
         if labels is None:
             labels = set()

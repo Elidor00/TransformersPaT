@@ -15,7 +15,6 @@
 # limitations under the License.
 """ Named entity recognition fine-tuning: utilities to work with CoNLL-2003 task. """
 
-
 import logging
 import os
 from dataclasses import dataclass
@@ -25,7 +24,6 @@ from typing import List, Optional, Union
 from filelock import FileLock
 
 from transformers import PreTrainedTokenizer, is_torch_available
-
 
 logger = logging.getLogger(__name__)
 
@@ -74,22 +72,22 @@ class TokenClassificationTask:
         raise NotImplementedError
 
     def convert_examples_to_features(
-        self,
-        examples: List[InputExample],
-        label_list: List[str],
-        max_seq_length: int,
-        tokenizer: PreTrainedTokenizer,
-        cls_token_at_end=False,
-        cls_token="[CLS]",
-        cls_token_segment_id=1,
-        sep_token="[SEP]",
-        sep_token_extra=False,
-        pad_on_left=False,
-        pad_token=0,
-        pad_token_segment_id=0,
-        pad_token_label_id=-100,
-        sequence_a_segment_id=0,
-        mask_padding_with_zero=True,
+            self,
+            examples: List[InputExample],
+            label_list: List[str],
+            max_seq_length: int,
+            tokenizer: PreTrainedTokenizer,
+            cls_token_at_end=False,
+            cls_token="[CLS]",
+            cls_token_segment_id=1,
+            sep_token="[SEP]",
+            sep_token_extra=False,
+            pad_on_left=False,
+            pad_token=0,
+            pad_token_segment_id=0,
+            pad_token_label_id=-100,
+            sequence_a_segment_id=0,
+            mask_padding_with_zero=True,
     ) -> List[InputFeatures]:
         """ Loads a data file into a list of `InputFeatures`
             `cls_token_at_end` define the location of the CLS token:
@@ -209,6 +207,7 @@ if is_torch_available():
     from torch import nn
     from torch.utils.data.dataset import Dataset
 
+
     class TokenClassificationDataset(Dataset):
         """
         This will be superseded by a framework-agnostic approach
@@ -217,19 +216,20 @@ if is_torch_available():
 
         features: List[InputFeatures]
         pad_token_label_id: int = nn.CrossEntropyLoss().ignore_index
+
         # Use cross entropy ignore_index as padding label id so that only
         # real label ids contribute to the loss later.
 
         def __init__(
-            self,
-            token_classification_task: TokenClassificationTask,
-            data_dir: str,
-            tokenizer: PreTrainedTokenizer,
-            labels: List[str],
-            model_type: str,
-            max_seq_length: Optional[int] = None,
-            overwrite_cache=False,
-            mode: Split = Split.train,
+                self,
+                token_classification_task: TokenClassificationTask,
+                data_dir: str,
+                tokenizer: PreTrainedTokenizer,
+                labels: List[str],
+                model_type: str,
+                max_seq_length: Optional[int] = None,
+                overwrite_cache=False,
+                mode: Split = Split.train,
         ):
             # Load data features from cache or dataset file
             cached_features_file = os.path.join(
