@@ -14,9 +14,9 @@ def write_metrics_to_file(res, path):
         with open(path + "conllu_metrics.txt", "w") as writer:
             for key, value in res.items():
                 if key == "las" or key == "uas" or key == "label_acc":
-                    writer.write(str(key) + " " + str(value) + " %" + "\n")
+                    writer.write(str(key) + " = " + str(value) + " %" + "\n")
                 else:
-                    writer.write(str(key) + " " + str(value) + "\n")
+                    writer.write(str(key) + " = " + str(value) + "\n")
     except IOError as e:
         print("({})".format(e))
 
@@ -52,10 +52,10 @@ def compute_conllu_metrics(path, tasks_type):
                     res["total"] += 1
     except IOError as e:
         print("({})".format(e))
-    print("las: ", res["las"], " / ", res["total"])
-    print("uas: ", res["uas"], " / ", res["total"])
-    print("label_acc: ", res["label_acc"], " / ", res["total"])
-    print("punct label: ", res["punct"])
+    print("las = ", res["las"], " / ", res["total"])
+    print("uas = ", res["uas"], " / ", res["total"])
+    print("label_acc = ", res["label_acc"], " / ", res["total"])
+    print("punct label = ", res["punct"])
     # in total non è contata una frase da 117: 10417 sono in totale di cui 1162 (senza contare quelle nella frase da 117) di punct
     return res
 

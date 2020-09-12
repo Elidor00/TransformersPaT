@@ -6,7 +6,7 @@ Token classification based on [Name Entity Recognition](https://github.com/huggi
 ```
 conda create -n transformers-pat python=3.6.9
 conda activate transformers-pat
-pip install transformers==3.0.2 seqeval==0.0.12 conllu==4.0 torch==1.4.0 torchvision==0.5.0 pytorch-pretrained-bert==0.6.2 networkx==2.4
+pip install -r requirements.txt
 ```
 
 ### Data
@@ -19,6 +19,11 @@ In this repo i'm using italian-isdt UD version 2.6.
 
 For now the tasks available are only NER and PoS-tagging. 
 Thanks to this [PR](https://github.com/huggingface/transformers/pull/6457) is now possible to add new type of tasks in ```tasks.py```.
+
+Update:
+- Create DEPREL-tagging and RELPOS tasks
+
+(RELPOS task is inspired by this [article](https://www.aclweb.org/anthology/2020.lrec-1.643/))
 
 ### Run
 
@@ -86,40 +91,50 @@ eval_f1 = 0.964663425392211
 
 ##### Eval results 
 ```
-eval_loss = 0.2931467722839033
-eval_accuracy_score = 0.9117400067181727
-eval_precision = 0.9091454016098647
-eval_recall = 0.9070482699700982
-eval_f1 = 0.9080956250267288
+eval_loss = 0.2954632102603644
+eval_accuracy_score = 0.9126637554585153
+eval_precision = 0.9099708754497173
+eval_recall = 0.907560871422469
+eval_f1 = 0.9087642756319775
 epoch = 3.0
 ```
 
 ##### Test results
 ```
-eval_loss = 0.2617744687395018
-eval_accuracy_score = 0.9213483146067416
-eval_precision = 0.9188105252861195
-eval_recall = 0.9169269816477938
-eval_f1 = 0.91786778716959
+eval_loss = 0.2616970073737082
+eval_accuracy_score = 0.9204840103716508
+eval_precision = 0.9175308158873019
+eval_recall = 0.9155603279968763
+eval_f1 = 0.9165445128505815
 ```
 
 #### task_type: RELPOS (Relative Position between head and id)
 
 ##### Eval results 
 ```
-eval_loss = 0.7054957197585576
-eval_accuracy_score = 0.7948438024857238
-eval_precision = 0.7775862068965518
-eval_recall = 0.7679003494936822
-eval_f1 = 0.7727129266423194
+eval_loss = 0.7067813938352424
+eval_accuracy_score = 0.7946758481692979
+eval_precision = 0.7764951826940556
+eval_recall = 0.7655703916121517
+eval_f1 = 0.7709940887144081
 epoch = 3.0
 ```
 
 ##### Test results
 ```
-eval_loss = 0.6385571194476769
-eval_accuracy_score = 0.8070680879669644
-eval_precision = 0.7904142134077058
-eval_recall = 0.7806570087737197
-eval_f1 = 0.785505312323564
+eval_loss = 0.6422599390393398
+eval_accuracy_score = 0.8077403245942572
+eval_precision = 0.7905175085218469
+eval_recall = 0.7807590287696389
+eval_f1 = 0.7856079659190063
+```
+
+#### Evaluation of DEPREL and RELPOS together
+Evaluation done through the script ```compute_conllu_metrics.py```
+```
+las = 76.61165048543688 %  (7891 / 10300)
+uas = 80.85436893203884 %  (8328 / 10300)
+label_acc = 92.07766990291262 %  (9484 / 10300)
+total = 10300
+punct = 1162
 ```
