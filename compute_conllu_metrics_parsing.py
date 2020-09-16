@@ -38,7 +38,7 @@ def compute_conllu_metrics(path, tasks_type):
                     el_deprel = el[0].replace('(', '').replace(')', '').split("|")
                     el_relpos = el[1].replace('(', '').replace(')', '').split("|")
                     if el_deprel[0] == "punct":
-                        # count number of "punct" label
+                        # count number of "punct" label, in any position
                         res["punct"] += 1
                     if el_deprel[0] == el_deprel[1] and el_relpos[0] == el_relpos[1]:
                         # same label and head's relative position
