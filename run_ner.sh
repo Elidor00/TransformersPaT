@@ -2,7 +2,8 @@
 # curl --remote-name-all https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-3226{/ud-treebanks-v2.6.tgz,/ud-documentation-v2.6.tgz,/ud-tools-v2.6.tgz}
 
 export MAX_LENGTH=200
-export BERT_MODEL=bert-base-uncased
+# export BERT_MODEL=bert-base-uncased
+export BERT_MODEL=Musixmatch/umberto-wikipedia-uncased-v1
 export OUTPUT_DIR=transformers-pat-model
 export BATCH_SIZE=32
 export NUM_EPOCHS=3
