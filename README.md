@@ -155,29 +155,51 @@ punct = 1162
 
 ##### Eval results 
 ```
-
+eval_loss = 0.3033303979416968
+eval_accuracy_score = 0.9387806516627477
+eval_precision = 0.9369160881117682
+eval_recall = 0.9338744126441691
+eval_f1 = 0.9353927776826972
+epoch = 3.0
 ```
 
 ##### Test results
 ```
-
+eval_loss = 0.26721003541692356
+eval_accuracy_score = 0.9451857540558702
+eval_precision = 0.9435586422772181
+eval_recall = 0.9412568306010929
+eval_f1 = 0.942406330907137
 ```
 
 #### task_type: RELPOS (Relative Position between head and id)
 
 ##### Eval results 
 ```
-
+eval_loss = 0.7107215431374563
+eval_accuracy_score = 0.824319785018475
+eval_precision = 0.8124152886961236
+eval_recall = 0.8057173581862174
+eval_f1 = 0.8090524610816161
+epoch = 3.0
 ```
 
 ##### Test results
 ```
-
+eval_loss = 0.6347696009229441
+eval_accuracy_score = 0.8358452529519056
+eval_precision = 0.8251546391752578
+eval_recall = 0.8162349581888639
+eval_f1 = 0.8206705629037219
 ```
 
 #### Evaluation of DEPREL and RELPOS together
 Evaluation done through the script ```compute_conllu_metrics.py```
 ```
-
+las = 80.45502543918595 %
+uas = 83.58452529519056 %
+label_acc = 94.51857540558703 %
+total = 10417
+punct = 1175
 ```
 </details>
