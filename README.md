@@ -64,9 +64,13 @@ python3 run_ner.py \
 
 ```
 
-### Results
+### Tasks Results
+#### Bert_model: bert-base-uncased
 
-#### task_type: POS (PoS-tagging)
+<details>
+  <summary>Results with bert-base-uncased model</summary>
+  
+  #### task_type: POS (PoS-tagging)
 
 ##### Eval results 
 ```
@@ -138,3 +142,42 @@ label_acc = 92.07766990291262 %  (9484 / 10300)
 total = 10300
 punct = 1162
 ```
+</details>
+
+
+### Tasks Results
+#### Bert_model: Musixmatch/umberto-wikipedia-uncased-v1
+
+<details>
+  <summary>Results with umberto-wikipedia-uncased-v1 model</summary>
+  
+#### task_type: DEPREL (Universal Dependency Relations)
+
+##### Eval results 
+```
+
+```
+
+##### Test results
+```
+
+```
+
+#### task_type: RELPOS (Relative Position between head and id)
+
+##### Eval results 
+```
+
+```
+
+##### Test results
+```
+
+```
+
+#### Evaluation of DEPREL and RELPOS together
+Evaluation done through the script ```compute_conllu_metrics.py```
+```
+
+```
+</details>
