@@ -200,23 +200,20 @@ class DEPREL(TokenClassificationTask):
 
     def write_predictions_to_file(self, writer: TextIO, test_input_reader: TextIO, preds_list: List):
         example_id = 0
-        error = 0
-        # print("input: ", test_input_reader)  # test.txt
-        # print("list: ", preds_list)  # lista di liste che contiene tutti i DEPREL tag per ogni frase in test.txt
+        total = 0
         for sentence in parse_incr(test_input_reader):
             s_p = preds_list[example_id]
-            if len(sentence) == len(s_p):
-                out = ""
-                for token in sentence:
-                    out += f'{token["form"]} ({token["deprel"]}|{s_p.pop(0)}) '
-                out += "\n"
-                writer.write(out)
-            else:
-                error += 1
+            out = ""
+            for token in sentence:
+                total += 1
+                out += f'{token["form"]} ({token["deprel"]}|{s_p.pop(0)}) '
+            out += "\n"
+            writer.write(out)
             example_id += 1
-        assert error == 1
-        # it_isdt-ud-test.txt
-        # text = Salvo che sia espressamente convenuto altrimenti per iscritto fra le parti, il Licenziante offre l'opera in licenza "così com'è" e non fornisce alcuna dichiarazione o garanzia di qualsiasi tipo con riguardo all'opera, sia essa espressa od implicita, di fonte legale o di altro tipo, essendo quindi escluse, fra le altre, le garanzie relative al titolo, alla commerciabilità, all'idoneità per un fine specifico e alla non violazione di diritti di terzi o alla mancanza di difetti latenti o di altro tipo, all'esattezza od alla presenza di errori, siano essi accertabili o meno.
+        assert total == 10417
+        assert example_id == 482
+        print("Nr.: ", example_id, " of sentences analyzed")  # 482 sentences
+        print("Nr.: ", total, " of token analyzed")  # 10417 token
 
     def set_labels(self, data_dir: str, mode: Union[Split, str]):
         """
@@ -276,24 +273,20 @@ class RELPOS(TokenClassificationTask):
 
     def write_predictions_to_file(self, writer: TextIO, test_input_reader: TextIO, preds_list: List):
         example_id = 0
-        error = 0
-        # print("input: ", test_input_reader)  # test.txt
-        # print("list: ", preds_list)  # lista di liste che contiene tutte le relative position per ogni frase in test.txt
+        total = 0
         for sentence in parse_incr(test_input_reader):
             s_p = preds_list[example_id]
-            # print("s_p: ", s_p)
-            if len(sentence) == len(s_p):
-                out = ""
-                for token in sentence:
-                    out += f'{token["form"]} ({0 if token["head"] == 0 else token["head"] - token["id"]}|{s_p.pop(0)}) '
-                out += "\n"
-                writer.write(out)
-            else:
-                error += 1
+            out = ""
+            for token in sentence:
+                total += 1
+                out += f'{token["form"]} ({0 if token["head"] == 0 else token["head"] - token["id"]}|{s_p.pop(0)}) '
+            out += "\n"
+            writer.write(out)
             example_id += 1
-        assert error == 1
-        # it_isdt-ud-test.txt
-        # text = Salvo che sia espressamente convenuto altrimenti per iscritto fra le parti, il Licenziante offre l'opera in licenza "così com'è" e non fornisce alcuna dichiarazione o garanzia di qualsiasi tipo con riguardo all'opera, sia essa espressa od implicita, di fonte legale o di altro tipo, essendo quindi escluse, fra le altre, le garanzie relative al titolo, alla commerciabilità, all'idoneità per un fine specifico e alla non violazione di diritti di terzi o alla mancanza di difetti latenti o di altro tipo, all'esattezza od alla presenza di errori, siano essi accertabili o meno.
+        assert total == 10417
+        assert example_id == 482
+        print("Nr.: ", example_id, " of sentences analyzed")  # 482 sentences
+        print("Nr.: ", total, " of token analyzed")  # 10417 token
 
     def set_labels(self, data_dir: str, mode: Union[Split, str]):
         """
