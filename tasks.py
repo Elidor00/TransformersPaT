@@ -292,6 +292,9 @@ class RELPOS(TokenClassificationTask):
         """
         set the set of labels for prediction
         """
+        left_threshold = -50
+        right_threshold = 50
+        self.labels.add("<unk>")
         for file in mode:
             print("Extracting labels from: ", file.value)
             file_path = os.path.join(data_dir, f"{file.value}.txt")
@@ -299,7 +302,12 @@ class RELPOS(TokenClassificationTask):
                 for sentence in parse_incr(f):
                     for token in sentence:
                         # labels must have str type
-                        self.labels.add('0' if token["head"] == 0 else str(token["head"] - token["id"]))
+                        label_val = 0 if token["head"] == 0 else token["head"] - token["id"]
+                        if left_threshold < label_val < right_threshold:
+                            # self.labels.add('0' if token["head"] == 0 else str(token["head"] - token["id"]))
+                            self.labels.add(str(label_val))
+        print("label: ", self.labels)
+        print("label len: ", len(self.labels))
 
     def get_labels(self, path: str) -> List[str]:
         """
