@@ -274,12 +274,19 @@ class RELPOS(TokenClassificationTask):
     def write_predictions_to_file(self, writer: TextIO, test_input_reader: TextIO, preds_list: List):
         example_id = 0
         total = 0
+        left_threshold = -50
+        right_threshold = 50
         for sentence in parse_incr(test_input_reader):
             s_p = preds_list[example_id]
             out = ""
             for token in sentence:
                 total += 1
-                out += f'{token["form"]} ({0 if token["head"] == 0 else token["head"] - token["id"]}|{s_p.pop(0)}) '
+                label_val = 0 if token["head"] == 0 else token["head"] - token["id"]
+                if left_threshold < label_val < right_threshold:
+                    # self.labels.add('0' if token["head"] == 0 else str(token["head"] - token["id"]))
+                    out += f'{token["form"]} ({label_val}|{s_p.pop(0)}) '
+                else:
+                    out += f'{token["form"]} (<unk>|{s_p.pop(0)}) '
             out += "\n"
             writer.write(out)
             example_id += 1

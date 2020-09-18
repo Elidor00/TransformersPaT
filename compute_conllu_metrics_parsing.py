@@ -22,7 +22,12 @@ def write_metrics_to_file(res, path):
 
 
 def compute_conllu_metrics(path, tasks_type):
-    res = {"las": 0.0, "uas": 0.0, "label_acc": 0.0, "total": 0, "punct": 0}
+    """
+    Compute las and uas metrics.
+    For each deprel and relpos element (tuple -> couple):
+    (right label, predicted label)
+    """
+    res = {"las": 0.0, "uas": 0.0, "label_acc": 0.0, "total": 0, "punct": 0, "<unk>": 0}
     try:
         with open(os.path.join(path, "test_predictions_" + tasks_type[0] + ".txt")) as f1_deprel, \
                 open(os.path.join(path, "test_predictions_" + tasks_type[1] + ".txt")) as f2_relpos:
@@ -38,8 +43,11 @@ def compute_conllu_metrics(path, tasks_type):
                     el_deprel = el[0].replace('(', '').replace(')', '').split("|")
                     el_relpos = el[1].replace('(', '').replace(')', '').split("|")
                     if el_deprel[0] == "punct":
-                        # count number of "punct" label, in any position
+                        # count number of "punct" as right label
                         res["punct"] += 1
+                    if el_relpos[0] == "<unk>":
+                        # count number of "<unk>" as right label
+                        res["<unk>"] += 1
                     if el_deprel[0] == el_deprel[1] and el_relpos[0] == el_relpos[1]:
                         # same label and head's relative position
                         res["las"] += 1
@@ -56,7 +64,7 @@ def compute_conllu_metrics(path, tasks_type):
     print("uas = ", res["uas"], " / ", res["total"])
     print("label_acc = ", res["label_acc"], " / ", res["total"])
     print("punct label = ", res["punct"])
-    # in total non è contata una frase da 117: 10417 sono in totale di cui 1162 (senza contare quelle nella frase da 117) di punct
+    print("<unk> label = ", res["<unk>"])
     return res
 
 
