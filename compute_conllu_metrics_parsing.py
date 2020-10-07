@@ -9,19 +9,20 @@ Label accuracy score:
 import os
 
 
-def write_metrics_to_file(res, path):
+def write_metrics_to_file(res, use_punct, path):
     try:
         with open(path + "conllu_metrics.txt", "w") as writer:
+            writer.write("Considered punct: " + str(use_punct) + "\n")
             for key, value in res.items():
                 if key == "las" or key == "uas" or key == "label_acc":
-                    writer.write(str(key) + " = " + str(value) + " %" + "\n")
+                    writer.write(str(key) + " = " + str(round(value, 2)) + " %" + "\n")
                 else:
-                    writer.write(str(key) + " = " + str(value) + "\n")
+                    writer.write(str(key) + " = " + str(round(value, 2)) + "\n")
     except IOError as e:
         print("({})".format(e))
 
 
-def compute_conllu_metrics(path, tasks_type):
+def compute_conllu_metrics(use_punct, path, tasks_type):
     """
     Compute las and uas metrics.
     For each deprel and relpos element (tuple -> couple):
@@ -42,22 +43,19 @@ def compute_conllu_metrics(path, tasks_type):
                 for el in zip(elements_file1, elements_file2):  # ('(acl|root)', '(2|0)')
                     el_deprel = el[0].replace('(', '').replace(')', '').split("|")
                     el_relpos = el[1].replace('(', '').replace(')', '').split("|")
-                    if el_deprel[0] == "punct":
-                        # count number of "punct" as right label
-                        res["punct"] += 1
                     if el_relpos[0] == "<unk>":
                         # count number of "<unk>" as right label
                         res["<unk>"] += 1
-                    if el_deprel[0] == el_deprel[1] and el_relpos[0] == el_relpos[1]:
-                        # same label and head's relative position
-                        res["las"] += 1
-                    if el_deprel[0] == el_deprel[1]:
-                        # same label
-                        res["label_acc"] += 1
-                    if el_relpos[0] == el_relpos[1]:
-                        # same head's relative position
-                        res["uas"] += 1
-                    res["total"] += 1
+                    if el_deprel[0] != "punct":
+                        # get metrics without considered "punct" element
+                        get_metrics(el_deprel, el_relpos, res)
+                    else:
+                        if use_punct:
+                            # count number of "punct" as right label
+                            res["punct"] += 1
+                            # get metrics considered punct element
+                            get_metrics(el_deprel, el_relpos, res)
+                        # else: not call get_metrics because i don't want considered "punct" label
     except IOError as e:
         print("({})".format(e))
     print("las = ", res["las"], " / ", res["total"])
@@ -68,16 +66,31 @@ def compute_conllu_metrics(path, tasks_type):
     return res
 
 
+def get_metrics(el_deprel, el_relpos, res):
+    if el_deprel[0] == el_deprel[1] and el_relpos[0] == el_relpos[1]:
+        # same label and head's relative position
+        res["las"] += 1
+    if el_deprel[0] == el_deprel[1]:
+        # same label
+        res["label_acc"] += 1
+    if el_relpos[0] == el_relpos[1]:
+        # same head's relative position
+        res["uas"] += 1
+    res["total"] += 1
+
+
 def main():
-    res = compute_conllu_metrics(path="results/", tasks_type=["DEPREL", "RELPOS"])
+    use_punct = True  # TODO: create a parameter with argparse
+    res = compute_conllu_metrics(use_punct, path="results/", tasks_type=["DEPREL", "RELPOS"])
     print("------------------------------------------------------------")
+    print("Considered punct: ", use_punct)
     res["las"] = (res["las"] / res["total"]) * 100
     res["uas"] = (res["uas"] / res["total"]) * 100
     res["label_acc"] = (res["label_acc"] / res["total"]) * 100
     print("las = ", res["las"], "%")
     print("uas (relpos) = ", res["uas"], "%")
     print("label accuracy score (deprel) = ", res["label_acc"], "%")
-    write_metrics_to_file(res, path="results/")
+    write_metrics_to_file(res, use_punct, path="results/")
 
 
 if __name__ == "__main__":
