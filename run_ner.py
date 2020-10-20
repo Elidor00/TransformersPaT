@@ -147,8 +147,8 @@ def main():
     # Set seed
     set_seed(training_args.seed)
 
-    # Set labels only for DEPREL, DELTA (RELPOS), PARSING
-    if model_args.task_type == "DEPREL" or model_args.task_type == "RELPOS":
+    # Set labels only for DEPREL, DELTA (RELPOS)
+    if model_args.task_type == "DEPREL" or model_args.task_type == "RELPOS" or model_args.task_type == "POS":
         token_classification_task.set_labels(data_args.data_dir, Split)
 
     # Prepare CONLL-2003 task

@@ -24,6 +24,9 @@ class NER(TokenClassificationTask):
             words = []
             labels = []
             for line in f:
+                # handle metadata
+                # if line.startswith("#"):
+                #     break
                 if line.startswith("-DOCSTART-") or line == "" or line == "\n":
                     if words:
                         examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=labels))
@@ -54,6 +57,9 @@ class NER(TokenClassificationTask):
                 writer.write(output_line)
             else:
                 logger.warning("Maximum sequence length exceeded: No prediction for '%s'.", line.split()[0])
+
+    def set_labels(self, data_dir: str, mode: Union[Split, str]):
+        pass
 
     def get_labels(self, path: str) -> List[str]:
         if path:
@@ -105,6 +111,11 @@ class Chunk(NER):
 
 
 class POS(TokenClassificationTask):
+    def __init__(self, labels=None):
+        if labels is None:
+            labels = set()
+        self.labels = labels
+
     def read_examples_from_file(self, data_dir, mode: Union[Split, str]) -> List[InputExample]:
         if isinstance(mode, Split):
             mode = mode.value
@@ -142,15 +153,10 @@ class POS(TokenClassificationTask):
                 error += 1
             example_id += 1
         assert error == 1
-        # it_isdt-ud-test.txt
-        # text = Salvo che sia espressamente convenuto altrimenti per iscritto fra le parti, il Licenziante offre l'opera in licenza "così com'è" e non fornisce alcuna dichiarazione o garanzia di qualsiasi tipo con riguardo all'opera, sia essa espressa od implicita, di fonte legale o di altro tipo, essendo quindi escluse, fra le altre, le garanzie relative al titolo, alla commerciabilità, all'idoneità per un fine specifico e alla non violazione di diritti di terzi o alla mancanza di difetti latenti o di altro tipo, all'esattezza od alla presenza di errori, siano essi accertabili o meno.
 
-    def get_labels(self, path: str) -> List[str]:
-        if path:
-            with open(path, "r") as f:
-                return f.read().splitlines()
-        else:
-            return [
+    def set_labels(self, data_dir: str, mode: Union[Split, str]):
+        self.labels.update(
+            [
                 "ADJ",
                 "ADP",
                 "ADV",
@@ -169,6 +175,14 @@ class POS(TokenClassificationTask):
                 "VERB",
                 "X",
             ]
+        )
+
+    def get_labels(self, path: str) -> List[str]:
+        if path:
+            with open(path, "r") as f:
+                return f.read().splitlines()
+        else:
+            return self.labels
 
 
 class DEPREL(TokenClassificationTask):

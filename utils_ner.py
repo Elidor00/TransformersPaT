@@ -68,6 +68,9 @@ class TokenClassificationTask:
     def read_examples_from_file(self, data_dir, mode: Union[Split, str]) -> List[InputExample]:
         raise NotImplementedError
 
+    def set_labels(self, data_dir: str, mode: Union[Split, str]):
+        raise NotImplementedError
+
     def get_labels(self, path: str) -> List[str]:
         raise NotImplementedError
 
@@ -116,7 +119,7 @@ class TokenClassificationTask:
                     tokens.extend(word_tokens)
                     # Use the real label id for the first token of the word, and padding ids for the remaining tokens
                     # check if label is included in range [-50, 50] otherwise assign a '<unk>' as label
-                    if not label in label_map:
+                    if label not in label_map:
                         label = "<unk>"
                     label_ids.extend([label_map[label]] + [pad_token_label_id] * (len(word_tokens) - 1))
 
