@@ -214,21 +214,21 @@ def main():
         else None
     )
 
-    def align_predictions(predictions: np.ndarray, label_ids: np.ndarray) -> Tuple[List[int], List[int]]:
-        preds = np.argmax(predictions, axis=2)
+    def align_predictions(trainer_pred: np.ndarray, right_label_ids: np.ndarray) -> Tuple[List[list], List[list]]:
+        preds = np.argmax(trainer_pred, axis=2)
 
         batch_size, seq_len = preds.shape
 
         out_label_list = [[] for _ in range(batch_size)]
-        preds_list = [[] for _ in range(batch_size)]
+        predictions_list = [[] for _ in range(batch_size)]
 
         for i in range(batch_size):
             for j in range(seq_len):
-                if label_ids[i, j] != nn.CrossEntropyLoss().ignore_index:
-                    out_label_list[i].append(label_map[label_ids[i][j]])
-                    preds_list[i].append(label_map[preds[i][j]])
+                if right_label_ids[i, j] != nn.CrossEntropyLoss().ignore_index:
+                    out_label_list[i].append(label_map[right_label_ids[i][j]])
+                    predictions_list[i].append(label_map[preds[i][j]])
 
-        return preds_list, out_label_list
+        return predictions_list, out_label_list
 
     def compute_metrics(p: EvalPrediction) -> Dict:
         preds_list, out_label_list = align_predictions(p.predictions, p.label_ids)
@@ -290,8 +290,8 @@ def main():
         )
 
         predictions, label_ids, metrics = trainer.predict(test_dataset)
-        preds_list, _ = align_predictions(predictions, label_ids)
-        print(preds_list)
+        predictions_list, _ = align_predictions(predictions, label_ids)
+        print(predictions_list)
 
         output_test_results_file = os.path.join(training_args.output_dir, "test_results.txt")
         if trainer.is_world_master():
@@ -305,7 +305,7 @@ def main():
         if trainer.is_world_master():
             with open(output_test_predictions_file, "w") as writer:
                 with open(os.path.join(data_args.data_dir, "it_isdt-ud-test.txt"), "r") as f:
-                    token_classification_task.write_predictions_to_file(writer, f, preds_list)
+                    token_classification_task.write_predictions_to_file(writer, f, predictions_list)
 
     return results
 

@@ -24,7 +24,7 @@ class NER(TokenClassificationTask):
             words = []
             labels = []
             for line in f:
-                # handle metadata
+                # handle metadata instead of using parse_incr(f)
                 # if line.startswith("#"):
                 #     break
                 if line.startswith("-DOCSTART-") or line == "" or line == "\n":
@@ -152,7 +152,7 @@ class POS(TokenClassificationTask):
             else:
                 error += 1
             example_id += 1
-        assert error == 1
+        assert error == 0
 
     def set_labels(self, data_dir: str, mode: Union[Split, str]):
         self.labels.update(

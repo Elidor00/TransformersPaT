@@ -68,6 +68,9 @@ class TokenClassificationTask:
     def read_examples_from_file(self, data_dir, mode: Union[Split, str]) -> List[InputExample]:
         raise NotImplementedError
 
+    def write_predictions_to_file(self, writer, f, predictions_list):
+        raise NotImplementedError
+
     def set_labels(self, data_dir: str, mode: Union[Split, str]):
         raise NotImplementedError
 
