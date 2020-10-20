@@ -196,10 +196,32 @@ eval_f1 = 0.8206705629037219
 #### Evaluation of DEPREL and RELPOS together
 Evaluation done through the script ```compute_conllu_metrics.py```
 ```
-las = 80.45502543918595 %
-uas = 83.58452529519056 %
-label_acc = 94.51857540558703 %
+Considered punct:  True
+Considered sym:  True
+las =  81.62618796198522 %
+uas (relpos) =  85.02447921666507 %
+label accuracy score (deprel) =  94.51857540558703 %
 total = 10417
 punct = 1175
+sym = 5
+```
+
+Evaluation done through the script ```compute_conllu_metrics.py``` without consider ```punctuation marks``` and ```symbols```
+```
+Considered punct:  False
+Considered sym:  False
+las =  85.34156111291546 %
+uas (relpos) =  89.08736602793115 %
+label accuracy score (deprel) =  93.99155569990256 %
+total = 9237
+punct = 0
+sym = 0 
 ```
 </details>
+
+
+### Evaluation script
+When running the evaluation script ```compute_conllu_metrics.py``` you can specify whether to consider ```punctuation marks``` and ```symbols```.
+
+Example of use:
+    ```python compute_conllu_metrics_parsing.py results/ --task_type DEPREL RELPOS --consider_punct --consider_sym --details```
