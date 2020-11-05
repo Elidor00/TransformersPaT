@@ -139,3 +139,6 @@ it_isdt-ud-*.txt
 
 # .idea files
 .idea/
+
+# results folders
+results*
