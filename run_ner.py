@@ -17,16 +17,15 @@
 import logging
 import os
 import sys
-from dataclasses import dataclass, field
 from importlib import import_module
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+from dataclasses import dataclass, field
 from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_score
 # seqeval is a Python framework for sequence labeling evaluation. seqeval can evaluate the performance of chunking tasks
 # such as named-entity recognition, part-of-speech tagging, semantic role labeling and so on.
 from torch import nn
-
 from transformers import (
     AutoConfig,
     AutoModelForTokenClassification,
@@ -37,6 +36,7 @@ from transformers import (
     TrainingArguments,
     set_seed,
 )
+
 from utils_ner import Split, TokenClassificationDataset, TokenClassificationTask
 
 logger = logging.getLogger(__name__)
@@ -181,8 +181,25 @@ def main():
         cache_dir=model_args.cache_dir,
     )
 
-    print("Model")
-    print(model)  # one of the possibile "BERT" with 12 layer + MLP output layer for fine-tuning
+    def check_req_grad(m):
+        for name, param in m.named_parameters():
+            print(str(name) + " " + str(param.requires_grad))
+
+    print("BERT Model:")
+    print(model)  # one of the possible BERT model with 12 layer + MLP output layer for fine-tuning
+
+    print("Bert tokenizer:")
+    print(tokenizer)
+
+    check_req_grad(model)
+
+    # for n, p in model.named_parameters():
+    #     if n == "classifier.weight" or n == "classifier.bias":
+    #         p.requires_grad = True
+    #     else:
+    #         p.requires_grad = False
+    #
+    # check_req_grad(model)
 
     # Get datasets
     train_dataset = (
