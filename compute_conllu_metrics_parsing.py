@@ -74,13 +74,17 @@ def compute_conllu_metrics(args):
     except IOError as e:
         print("({})".format(e))
     if args.details:
-        print("las = ", metrics_dict["las"], " / ", metrics_dict["total"])
-        print("uas = ", metrics_dict["uas"], " / ", metrics_dict["total"])
-        print("label_acc = ", metrics_dict["label_acc"], " / ", metrics_dict["total"])
-        print("punct label = ", metrics_dict["punct"])
-        print("sym = ", metrics_dict["sym"])
-        print("<unk> label = ", metrics_dict["<unk>"])
+        detailed_print(metrics_dict)
     return metrics_dict
+
+
+def detailed_print(metrics_dict):
+    print("las = ", metrics_dict["las"], " / ", metrics_dict["total"])
+    print("uas = ", metrics_dict["uas"], " / ", metrics_dict["total"])
+    print("label_acc = ", metrics_dict["label_acc"], " / ", metrics_dict["total"])
+    print("punct label = ", metrics_dict["punct"])
+    print("sym = ", metrics_dict["sym"])
+    print("<unk> label = ", metrics_dict["<unk>"])
 
 
 def remove_sym(line_deprel_file, line_relpos_file, sym):
@@ -90,8 +94,8 @@ def remove_sym(line_deprel_file, line_relpos_file, sym):
     indices = [i for i, x in enumerate(deprel_list) if sym in x]
     for i in range(0, len(indices)):
         # given indices remove SYM from lists
-        res_deprel = deprel_list[:indices[i]-(2*i)] + deprel_list[indices[i]-(2*i) + 2:]
-        res_relpos = relpos_list[:indices[i]-(2*i)] + relpos_list[indices[i]-(2*i) + 2:]
+        res_deprel = deprel_list[:indices[i] - (2 * i)] + deprel_list[indices[i] - (2 * i) + 2:]
+        res_relpos = relpos_list[:indices[i] - (2 * i)] + relpos_list[indices[i] - (2 * i) + 2:]
         assert len(res_deprel) == len(res_relpos)
         deprel_list = res_deprel
         relpos_list = res_relpos
@@ -155,12 +159,15 @@ def main():
     print("------------------------------------------------------------")
     print("Considered punct: ", args.consider_punct)
     print("Considered sym: ", args.consider_sym)
+
     metrics_dict["las"] = (metrics_dict["las"] / metrics_dict["total"]) * 100
     metrics_dict["uas"] = (metrics_dict["uas"] / metrics_dict["total"]) * 100
     metrics_dict["label_acc"] = (metrics_dict["label_acc"] / metrics_dict["total"]) * 100
+
     print("las = ", metrics_dict["las"], "%")
     print("uas (relpos) = ", metrics_dict["uas"], "%")
     print("label accuracy score (deprel) = ", metrics_dict["label_acc"], "%")
+
     write_metrics_to_file(metrics_dict, args)
 
 
