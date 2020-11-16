@@ -12,9 +12,12 @@ Label accuracy score:
 """
 import argparse
 import os
+import logging
 
 # approximate list of symbols (SYM) in the Italian UD. Source: https://universaldependencies.org/it/pos/SYM.html
 APPROX_SYM_LIST = ['%', '#', '@', '€', '$', '§', '¢', '©', ':)', ':-)', ':(', ':-(']
+
+logger = logging.getLogger(__name__)
 
 
 def write_metrics_to_file(metrics_dict, args):
@@ -79,12 +82,12 @@ def compute_conllu_metrics(args):
 
 
 def detailed_print(metrics_dict):
-    print("las = ", metrics_dict["las"], " / ", metrics_dict["total"])
-    print("uas = ", metrics_dict["uas"], " / ", metrics_dict["total"])
-    print("label_acc = ", metrics_dict["label_acc"], " / ", metrics_dict["total"])
-    print("punct label = ", metrics_dict["punct"])
-    print("sym = ", metrics_dict["sym"])
-    print("<unk> label = ", metrics_dict["<unk>"])
+    logger.info("las = %s / %s ", metrics_dict["las"], metrics_dict["total"])
+    logger.info("uas = %s / %s ", metrics_dict["uas"], metrics_dict["total"])
+    logger.info("label_acc = %s / %s ", metrics_dict["label_acc"], metrics_dict["total"])
+    logger.info("punct label = %s ", metrics_dict["punct"])
+    logger.info("sym = %s ", metrics_dict["sym"])
+    logger.info("<unk> label = %s ", metrics_dict["<unk>"])
 
 
 def remove_sym(line_deprel_file, line_relpos_file, sym):
@@ -155,18 +158,25 @@ def main():
     args = parser.parse_args()
     print(args)
 
+    # Setup logging
+    logging.basicConfig(
+        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+        datefmt="%m/%d/%Y %H:%M:%S",
+        level=logging.INFO,
+    )
+
     metrics_dict = compute_conllu_metrics(args)
-    print("------------------------------------------------------------")
-    print("Considered punct: ", args.consider_punct)
-    print("Considered sym: ", args.consider_sym)
+    logger.info("-"*50)
+    logger.info("Considered punct: %s ", args.consider_punct)
+    logger.info("Considered sym: %s ", args.consider_sym)
 
     metrics_dict["las"] = (metrics_dict["las"] / metrics_dict["total"]) * 100
     metrics_dict["uas"] = (metrics_dict["uas"] / metrics_dict["total"]) * 100
     metrics_dict["label_acc"] = (metrics_dict["label_acc"] / metrics_dict["total"]) * 100
 
-    print("las = ", metrics_dict["las"], "%")
-    print("uas (relpos) = ", metrics_dict["uas"], "%")
-    print("label accuracy score (deprel) = ", metrics_dict["label_acc"], "%")
+    logger.info("las = %s %s", metrics_dict["las"], "%")
+    logger.info("uas (relpos) = %s %s", metrics_dict["uas"], "%")
+    logger.info("label accuracy score (deprel) = %s %s", metrics_dict["label_acc"], "%")
 
     write_metrics_to_file(metrics_dict, args)
 

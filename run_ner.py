@@ -132,7 +132,7 @@ def main():
 
     # Setup logging
     logging.basicConfig(
-        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+        format="%(asctime)s - %(levelname)s - %(name)s -  %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
         level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
     )
@@ -185,13 +185,12 @@ def main():
 
     def check_req_grad(m):
         for name, param in m.named_parameters():
-            print(str(name) + " " + str(param.requires_grad))
+            logger.info(str(name) + " " + str(param.requires_grad))
 
-    print("BERT Model:")
-    print(model)  # one of the possible BERT model with 12 layer + MLP output layer for fine-tuning
+    # one of the possible BERT model with 12 layer + MLP output layer for fine-tuning
+    logger.info("BERT Model: \n %s", model)
 
-    print("Bert tokenizer:")
-    print(tokenizer)
+    logger.info("Bert tokenizer: \n %s", tokenizer)
 
     check_req_grad(model)
 
@@ -286,8 +285,8 @@ def main():
         optimizers=(optimizer, scheduler)
     )
 
-    # print("Optimizer: ", trainer.get_optimizers(750)[0])
-    # print("Scheduler: ", trainer.get_optimizers(750)[1].state_dict())
+    logger.info("Optimizer: \n %s ", trainer.get_optimizers(750)[0])
+    logger.info("Scheduler: \n %s ", trainer.get_optimizers(750)[1].state_dict())
 
     # Training
     if training_args.do_train:
