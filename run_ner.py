@@ -26,6 +26,7 @@ from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_sc
 # seqeval is a Python framework for sequence labeling evaluation. seqeval can evaluate the performance of chunking tasks
 # such as named-entity recognition, part-of-speech tagging, semantic role labeling and so on.
 from torch import nn
+from torch.optim import AdamW
 from transformers import (
     AutoConfig,
     AutoModelForTokenClassification,
@@ -35,6 +36,7 @@ from transformers import (
     Trainer,
     TrainingArguments,
     set_seed,
+    get_linear_schedule_with_warmup,
 )
 
 from utils_ner import Split, TokenClassificationDataset, TokenClassificationTask
@@ -256,6 +258,24 @@ def main():
             "f1": f1_score(out_label_list, preds_list),
         }
 
+    # Define optimizer and scheduler
+    no_decay = ["bias", "LayerNorm.weight"]
+    optimizer_grouped_parameters = [
+        {
+            "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+            "weight_decay": 0.0,
+        },
+        {
+            "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
+            "weight_decay": 0.0,
+        },
+    ]
+
+    optimizer = AdamW(optimizer_grouped_parameters, lr=5e-05, eps=1e-08)
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer, num_warmup_steps=0, num_training_steps=750
+    )
+
     # Initialize our Trainer
     trainer = Trainer(
         model=model,
@@ -263,7 +283,11 @@ def main():
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         compute_metrics=compute_metrics,
+        optimizers=(optimizer, scheduler)
     )
+
+    # print("Optimizer: ", trainer.get_optimizers(750)[0])
+    # print("Scheduler: ", trainer.get_optimizers(750)[1].state_dict())
 
     # Training
     if training_args.do_train:
