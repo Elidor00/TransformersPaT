@@ -18,14 +18,16 @@ import logging
 import os
 import sys
 from importlib import import_module
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Callable
 
 import numpy as np
+import torch
 from dataclasses import dataclass, field
 from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_score
 # seqeval is a Python framework for sequence labeling evaluation. seqeval can evaluate the performance of chunking tasks
 # such as named-entity recognition, part-of-speech tagging, semantic role labeling and so on.
 from torch import nn
+from torch.utils.data.dataset import Dataset
 from transformers import (
     AutoConfig,
     AutoModelForTokenClassification,
@@ -35,6 +37,8 @@ from transformers import (
     Trainer,
     TrainingArguments,
     set_seed,
+    PreTrainedModel,
+    DataCollator,
 )
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
@@ -96,8 +100,26 @@ class DataTrainingArguments:
 
 class MyTrainer(Trainer):
     """
-    Class for overriding the get_optimizers method
+    Class for overriding get_optimizers() method
     """
+
+    def __init__(
+            self,
+            model: PreTrainedModel,
+            args: TrainingArguments,
+            data_collator: Optional[DataCollator] = None,
+            train_dataset: Optional[Dataset] = None,
+            eval_dataset: Optional[Dataset] = None,
+            compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+            prediction_loss_only=False,
+            tb_writer: Optional["SummaryWriter"] = None,
+            optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None,
+    ):
+        super().__init__(model, args, data_collator, train_dataset, eval_dataset, compute_metrics, prediction_loss_only,
+                         tb_writer, optimizers)
+
+        self.optimizer = None
+        self.scheduler = None
 
     def get_optimizers(self, num_training_steps: int):
         # Define optimizer and scheduler
@@ -105,7 +127,7 @@ class MyTrainer(Trainer):
         optimizer_grouped_parameters = [
             {
                 "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
-                "weight_decay": 0.0,
+                "weight_decay": self.args.weight_decay,
             },
             {
                 "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
@@ -113,14 +135,14 @@ class MyTrainer(Trainer):
             },
         ]
 
-        optimizer = AdamW(optimizer_grouped_parameters, lr=5e-5, betas=(0.9, 0.999), eps=1e-8)
-        scheduler = get_linear_schedule_with_warmup(
-            optimizer, num_warmup_steps=0,
+        self.optimizer = AdamW(optimizer_grouped_parameters, lr=5e-5, betas=(0.9, 0.999), eps=1e-8)
+        self.scheduler = get_linear_schedule_with_warmup(
+            self.optimizer, num_warmup_steps=self.args.warmup_steps,
             num_training_steps=int(len(self.get_train_dataloader()) //
                                    self.args.gradient_accumulation_steps * self.args.num_train_epochs)
         )
 
-        return optimizer, scheduler
+        return self.optimizer, self.scheduler
 
     def get_num_training_steps(self):
         num = int(len(self.get_train_dataloader()) //
