@@ -26,7 +26,6 @@ from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_sc
 # seqeval is a Python framework for sequence labeling evaluation. seqeval can evaluate the performance of chunking tasks
 # such as named-entity recognition, part-of-speech tagging, semantic role labeling and so on.
 from torch import nn
-from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from transformers import (
     AutoConfig,
     AutoModelForTokenClassification,
@@ -37,6 +36,7 @@ from transformers import (
     TrainingArguments,
     set_seed,
 )
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
 from utils_ner import Split, TokenClassificationDataset, TokenClassificationTask
 
@@ -98,6 +98,7 @@ class MyTrainer(Trainer):
     """
     Class for overriding the get_optimizers method
     """
+
     def get_optimizers(self, num_training_steps: int):
         # Define optimizer and scheduler
         no_decay = ["bias", "LayerNorm.weight"]
