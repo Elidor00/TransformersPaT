@@ -26,7 +26,7 @@ from seqeval.metrics import accuracy_score, f1_score, precision_score, recall_sc
 # seqeval is a Python framework for sequence labeling evaluation. seqeval can evaluate the performance of chunking tasks
 # such as named-entity recognition, part-of-speech tagging, semantic role labeling and so on.
 from torch import nn
-from torch.optim import AdamW
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from transformers import (
     AutoConfig,
     AutoModelForTokenClassification,
@@ -36,7 +36,6 @@ from transformers import (
     Trainer,
     TrainingArguments,
     set_seed,
-    get_linear_schedule_with_warmup,
 )
 
 from utils_ner import Split, TokenClassificationDataset, TokenClassificationTask
@@ -95,6 +94,39 @@ class DataTrainingArguments:
     )
 
 
+class MyTrainer(Trainer):
+    """
+    Class for overriding the get_optimizers method
+    """
+    def get_optimizers(self, num_training_steps: int):
+        # Define optimizer and scheduler
+        no_decay = ["bias", "LayerNorm.weight"]
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+            {
+                "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+        ]
+
+        optimizer = AdamW(optimizer_grouped_parameters, lr=5e-5, betas=(0.9, 0.999), eps=1e-8)
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=0,
+            num_training_steps=int(len(self.get_train_dataloader()) //
+                                   self.args.gradient_accumulation_steps * self.args.num_train_epochs)
+        )
+
+        return optimizer, scheduler
+
+    def get_num_training_steps(self):
+        num = int(len(self.get_train_dataloader()) //
+                  self.args.gradient_accumulation_steps * self.args.num_train_epochs)
+        return num
+
+
 def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
@@ -117,7 +149,8 @@ def main():
             and not training_args.overwrite_output_dir
     ):
         raise ValueError(
-            f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
+            f"Output directory ({training_args.output_dir}) "
+            f"already exists and is not empty. Use --overwrite_output_dir to overcome."
         )
 
     module = import_module("tasks")
@@ -257,36 +290,17 @@ def main():
             "f1": f1_score(out_label_list, preds_list),
         }
 
-    # Define optimizer and scheduler
-    no_decay = ["bias", "LayerNorm.weight"]
-    optimizer_grouped_parameters = [
-        {
-            "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
-            "weight_decay": 0.0,
-        },
-        {
-            "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
-            "weight_decay": 0.0,
-        },
-    ]
-
-    optimizer = AdamW(optimizer_grouped_parameters, lr=5e-05, eps=1e-08)
-    scheduler = get_linear_schedule_with_warmup(
-        optimizer, num_warmup_steps=0, num_training_steps=750
-    )
-
-    # Initialize our Trainer
-    trainer = Trainer(
+    # Initialize my Trainer
+    trainer = MyTrainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        compute_metrics=compute_metrics,
-        optimizers=(optimizer, scheduler)
+        compute_metrics=compute_metrics
     )
 
-    logger.info("Optimizer: \n %s ", trainer.get_optimizers(750)[0])
-    logger.info("Scheduler: \n %s ", trainer.get_optimizers(750)[1].state_dict())
+    logger.info("Optimizer: \n %s ", trainer.get_optimizers(trainer.get_num_training_steps())[0])
+    logger.info("Scheduler: \n %s ", trainer.get_optimizers(trainer.get_num_training_steps())[1].state_dict())
 
     # Training
     if training_args.do_train:
