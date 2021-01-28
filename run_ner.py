@@ -18,7 +18,7 @@ import logging
 import os
 import sys
 from importlib import import_module
-from typing import Dict, List, Optional, Tuple, Callable
+from typing import Dict, List, Optional, Tuple, Callable, Union
 
 import numpy as np
 import torch
@@ -38,9 +38,10 @@ from transformers import (
     TrainingArguments,
     set_seed,
     PreTrainedModel,
-    DataCollator,
+    DataCollator
 )
-from transformers.optimization import AdamW, get_linear_schedule_with_warmup
+from transformers.trainer_callback import TrainerCallback, EarlyStoppingCallback
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup, Adafactor
 
 from utils_ner import Split, TokenClassificationDataset, TokenClassificationTask
 
@@ -105,49 +106,56 @@ class MyTrainer(Trainer):
 
     def __init__(
             self,
-            model: PreTrainedModel,
-            args: TrainingArguments,
+            model: Union[PreTrainedModel, torch.nn.Module] = None,
+            args: TrainingArguments = None,
             data_collator: Optional[DataCollator] = None,
             train_dataset: Optional[Dataset] = None,
             eval_dataset: Optional[Dataset] = None,
+            tokenizer: Optional["PreTrainedTokenizerBase"] = None,
+            model_init: Callable[[], PreTrainedModel] = None,
             compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
-            prediction_loss_only=False,
-            tb_writer: Optional["SummaryWriter"] = None,
-            optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None,
+            callbacks: Optional[List[TrainerCallback]] = None,
+            optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None, None)
     ):
-        super().__init__(model, args, data_collator, train_dataset, eval_dataset, compute_metrics, prediction_loss_only,
-                         tb_writer, optimizers)
+        super().__init__(model, args, data_collator, train_dataset, eval_dataset, tokenizer, model_init,
+                         compute_metrics, callbacks, optimizers)
 
-        self.optimizer = None
-        self.scheduler = None
-
-    def get_optimizers(self, num_training_steps: int):
-        # Define optimizer and scheduler
-        no_decay = ["bias", "LayerNorm.weight"]
-        optimizer_grouped_parameters = [
-            {
-                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
-                "weight_decay": self.args.weight_decay,
-            },
-            {
-                "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
-                "weight_decay": 0.0,
-            },
-        ]
-
-        self.optimizer = AdamW(optimizer_grouped_parameters, lr=5e-5, betas=(0.9, 0.999), eps=1e-8)
-        self.scheduler = get_linear_schedule_with_warmup(
-            self.optimizer, num_warmup_steps=self.args.warmup_steps,
-            num_training_steps=int(len(self.get_train_dataloader()) //
-                                   self.args.gradient_accumulation_steps * self.args.num_train_epochs)
-        )
-
-        return self.optimizer, self.scheduler
+        self.optimizer, self.lr_scheduler = optimizers
 
     def get_num_training_steps(self):
         num = int(len(self.get_train_dataloader()) //
                   self.args.gradient_accumulation_steps * self.args.num_train_epochs)
         return num
+
+    def create_optimizer_and_scheduler(self, num_training_steps=0):
+        # Define optimizer and scheduler
+        if self.optimizer is None:
+            no_decay = ["bias", "LayerNorm.weight"]
+            optimizer_grouped_parameters = [
+                {
+                    "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                    "weight_decay": self.args.weight_decay,
+                },
+                {
+                    "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+                    "weight_decay": 0.0,
+                },
+            ]
+            self.optimizer = AdamW(optimizer_grouped_parameters, lr=5e-5, betas=(0.9, 0.999), eps=1e-8)
+            # self.optimizer = Adafactor(optimizer_grouped_parameters, lr=5e-5, eps=(1e-30, 1e-3), clip_threshold=1.0,
+            #                            decay_rate=-0.8, scale_parameter=True, relative_step=True, warmup_init=False)
+        if self.lr_scheduler is None:
+            self.lr_scheduler = get_linear_schedule_with_warmup(
+                self.optimizer, num_warmup_steps=0.06,
+                num_training_steps=self.get_num_training_steps()
+                # int(len(self.get_train_dataloader()) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
+            )
+
+    def get_optimizers(self) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
+        if self.optimizer is not None:
+            return self.optimizer, self.lr_scheduler
+        else:
+            logger.warning("Optimizer doesn't exist!")
 
 
 def main():
@@ -243,6 +251,8 @@ def main():
         for name, param in m.named_parameters():
             logger.info(str(name) + " " + str(param.requires_grad))
 
+    logger.info("Model config: \n %s", config)
+
     # one of the possible BERT model with 12 layer + MLP output layer for fine-tuning
     logger.info("BERT Model: \n %s", model)
 
@@ -319,22 +329,36 @@ def main():
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        compute_metrics=compute_metrics
+        compute_metrics=compute_metrics,
+        callbacks=[EarlyStoppingCallback(1, 0.0)]
     )
 
-    logger.info("Optimizer: \n %s ", trainer.get_optimizers(trainer.get_num_training_steps())[0])
-    logger.info("Scheduler: \n %s ", trainer.get_optimizers(trainer.get_num_training_steps())[1].state_dict())
+    logging.info("CallBack info: \n %s ", trainer.callback_handler.callback_list)
 
     # Training
     if training_args.do_train:
-        trainer.train(
+        train_result = trainer.train(
             model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
         )
-        trainer.save_model()
+
+        logger.info("Optimizer: \n %s ", trainer.get_optimizers())
+        logger.info("State: \n %s ", trainer.state)
+
+        # Save model
+        # trainer.save_model()
+
+        output_train_file = os.path.join(training_args.output_dir, "train_results.txt")
         # For convenience, we also re-save the tokenizer to the same directory,
         # so that you can share your model easily on huggingface.co/models =)
-        if trainer.is_world_master():
-            tokenizer.save_pretrained(training_args.output_dir)
+        if trainer.is_world_process_zero():
+            with open(output_train_file, "w") as writer:
+                logger.info("***** Train results *****")
+                for key, value in sorted(train_result.metrics.items()):
+                    logger.info(f"  {key} = {value}")
+                    writer.write(f"{key} = {value}\n")
+
+            # Save tokenizer
+            # tokenizer.save_pretrained(training_args.output_dir)
 
     # Evaluation
     results = {}
@@ -344,7 +368,7 @@ def main():
         result = trainer.evaluate()
 
         output_eval_file = os.path.join(training_args.output_dir, "eval_results.txt")
-        if trainer.is_world_master():
+        if trainer.is_world_process_zero():
             with open(output_eval_file, "w") as writer:
                 logger.info("***** Eval results *****")
                 for key, value in result.items():
@@ -371,15 +395,16 @@ def main():
         print(predictions_list)
 
         output_test_results_file = os.path.join(training_args.output_dir, "test_results.txt")
-        if trainer.is_world_master():
+        if trainer.is_world_process_zero():
             with open(output_test_results_file, "w") as writer:
+                logger.info("***** Test results *****")
                 for key, value in metrics.items():
                     logger.info("  %s = %s", key, value)
                     writer.write("%s = %s\n" % (key, value))
 
         # Save predictions
         output_test_predictions_file = os.path.join(training_args.output_dir, "test_predictions.txt")
-        if trainer.is_world_master():
+        if trainer.is_world_process_zero():
             with open(output_test_predictions_file, "w") as writer:
                 with open(os.path.join(data_args.data_dir, "it_isdt-ud-test.txt"), "r") as f:
                     token_classification_task.write_predictions_to_file(writer, f, predictions_list)

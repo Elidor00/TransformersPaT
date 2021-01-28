@@ -7,7 +7,7 @@ export BERT_MODEL=Musixmatch/umberto-wikipedia-uncased-v1
 export OUTPUT_DIR=transformers-pat-model
 export BATCH_SIZE=32
 export NUM_EPOCHS=3
-export SAVE_STEPS=750
+export SAVE_STEPS=500
 export SEED=1
 
 TRAIN_FILE=it_isdt-ud-train.conllu
@@ -44,9 +44,14 @@ python3 run_ner.py \
 --output_dir $OUTPUT_DIR \
 --max_seq_length  $MAX_LENGTH \
 --num_train_epochs $NUM_EPOCHS \
---per_gpu_train_batch_size $BATCH_SIZE \
+--per_device_train_batch_size $BATCH_SIZE \
 --save_steps $SAVE_STEPS \
 --seed $SEED \
+--load_best_model_at_end \
+--evaluation_strategy epoch \
+--metric_for_best_model eval_loss \
+--disable_tqdm False \
+--save_total_limit 1 \
 --do_train \
 --do_eval \
 --do_predict

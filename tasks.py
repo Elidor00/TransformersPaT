@@ -186,6 +186,7 @@ class POS(TokenClassificationTask):
 
 
 class DEPREL(TokenClassificationTask):
+
     def __init__(self, labels=None):
         if labels is None:
             labels = set()
@@ -240,6 +241,8 @@ class DEPREL(TokenClassificationTask):
                 for sentence in parse_incr(f):
                     for token in sentence:
                         self.labels.add(token["deprel"])
+        print("label: ", self.labels)
+        print("label len: ", len(self.labels))
 
     def get_labels(self, path: str) -> Union[List[str], dict]:
         """
@@ -281,6 +284,7 @@ class RELPOS(TokenClassificationTask):
                     labels.append('0' if token["head"] == 0 else str(token["head"] - token["id"]))
                 assert len(words) == len(labels)
                 if words:
+                    # Create all the examples for token classification (train and test) with the correlating features
                     examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=labels))
                     guid_index += 1
         return examples
