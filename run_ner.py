@@ -367,10 +367,10 @@ def main():
 
         result = trainer.evaluate()
 
-        output_eval_file = os.path.join(training_args.output_dir, "eval_results.txt")
+        output_eval_file = os.path.join(training_args.output_dir, "dev_results.txt")
         if trainer.is_world_process_zero():
             with open(output_eval_file, "w") as writer:
-                logger.info("***** Eval results *****")
+                logger.info("***** Dev results *****")
                 for key, value in result.items():
                     logger.info("  %s = %s", key, value)
                     writer.write("%s = %s\n" % (key, value))
@@ -390,31 +390,9 @@ def main():
             mode=Split.test,
         )
 
-        dev_dataset = TokenClassificationDataset(
-            token_classification_task=token_classification_task,
-            data_dir=data_args.data_dir,
-            tokenizer=tokenizer,
-            labels=labels,
-            model_type=config.model_type,
-            max_seq_length=data_args.max_seq_length,
-            overwrite_cache=data_args.overwrite_cache,
-            mode=Split.dev,
-        )
-
-        train_dataset = TokenClassificationDataset(
-            token_classification_task=token_classification_task,
-            data_dir=data_args.data_dir,
-            tokenizer=tokenizer,
-            labels=labels,
-            model_type=config.model_type,
-            max_seq_length=data_args.max_seq_length,
-            overwrite_cache=data_args.overwrite_cache,
-            mode=Split.train,
-        )
-
         predictions_test, label_ids_test, metrics_test = trainer.predict(test_dataset)
         predictions_list_test, _ = align_predictions(predictions_test, label_ids_test)
-        print("test: ", predictions_list_test)
+        print("pred list test: ", predictions_list_test)
 
         output_test_results_file = os.path.join(training_args.output_dir, "test_results.txt")
         if trainer.is_world_process_zero():
@@ -424,21 +402,13 @@ def main():
                     logger.info("  %s = %s", key, value)
                     writer.write("%s = %s\n" % (key, value))
 
-        predictions_dev, label_ids_dev, metrics_dev = trainer.predict(dev_dataset)
+        predictions_dev, label_ids_dev, metrics_dev = trainer.predict(eval_dataset)
         predictions_list_dev, _ = align_predictions(predictions_dev, label_ids_dev)
-        print("dev: ", predictions_list_dev)
-
-        output_test_results_file = os.path.join(training_args.output_dir, "dev_results.txt")
-        if trainer.is_world_process_zero():
-            with open(output_test_results_file, "w") as writer:
-                logger.info("***** Dev results *****")
-                for key, value in metrics_dev.items():
-                    logger.info("  %s = %s", key, value)
-                    writer.write("%s = %s\n" % (key, value))
+        print("pred list dev: ", predictions_list_dev)
 
         predictions_train, label_ids_train, metrics_train = trainer.predict(train_dataset)
         predictions_list_train, _ = align_predictions(predictions_train, label_ids_train)
-        print("train: ", predictions_list_train)
+        print("pred list train: ", predictions_list_train)
 
         output_test_results_file = os.path.join(training_args.output_dir, "train_results.txt")
         if trainer.is_world_process_zero():

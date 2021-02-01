@@ -225,8 +225,8 @@ class DEPREL(TokenClassificationTask):
             out += "\n"
             writer.write(out)
             example_id += 1
-        assert total == 10417
-        assert example_id == 482
+        assert total == sum([len(elem) for elem in preds_list])
+        assert example_id == len(preds_list)
         print("Nr.: ", example_id, " of sentences analyzed")  # 482 sentences
         print("Nr.: ", total, " of token analyzed")  # 10417 token
 
@@ -308,8 +308,8 @@ class RELPOS(TokenClassificationTask):
             out += "\n"
             writer.write(out)
             example_id += 1
-        assert total == 10417
-        assert example_id == 482
+        assert total == sum([len(elem) for elem in preds_list])
+        assert example_id == len(preds_list)
         print("Nr.: ", example_id, " of sentences analyzed")  # 482 sentences
         print("Nr.: ", total, " of token analyzed")  # 10417 token
 
