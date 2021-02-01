@@ -216,6 +216,7 @@ class DEPREL(TokenClassificationTask):
     def write_predictions_to_file(self, writer: TextIO, test_input_reader: TextIO, preds_list: List):
         example_id = 0
         total = 0
+        count = sum([len(elem) for elem in preds_list])
         for sentence in parse_incr(test_input_reader):
             s_p = preds_list[example_id]
             out = ""
@@ -225,7 +226,7 @@ class DEPREL(TokenClassificationTask):
             out += "\n"
             writer.write(out)
             example_id += 1
-        assert total == sum([len(elem) for elem in preds_list])
+        assert total == count
         assert example_id == len(preds_list)
         print("Nr.: ", example_id, " of sentences analyzed")  # 482 sentences
         print("Nr.: ", total, " of token analyzed")  # 10417 token
@@ -294,6 +295,7 @@ class RELPOS(TokenClassificationTask):
         total = 0
         left_threshold = -50
         right_threshold = 50
+        count = sum([len(elem) for elem in preds_list])
         for sentence in parse_incr(test_input_reader):
             s_p = preds_list[example_id]
             out = ""
@@ -308,7 +310,7 @@ class RELPOS(TokenClassificationTask):
             out += "\n"
             writer.write(out)
             example_id += 1
-        assert total == sum([len(elem) for elem in preds_list])
+        assert total == count
         assert example_id == len(preds_list)
         print("Nr.: ", example_id, " of sentences analyzed")  # 482 sentences
         print("Nr.: ", total, " of token analyzed")  # 10417 token
