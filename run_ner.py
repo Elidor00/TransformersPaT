@@ -390,24 +390,84 @@ def main():
             mode=Split.test,
         )
 
-        predictions, label_ids, metrics = trainer.predict(test_dataset)
-        predictions_list, _ = align_predictions(predictions, label_ids)
-        print(predictions_list)
+        dev_dataset = TokenClassificationDataset(
+            token_classification_task=token_classification_task,
+            data_dir=data_args.data_dir,
+            tokenizer=tokenizer,
+            labels=labels,
+            model_type=config.model_type,
+            max_seq_length=data_args.max_seq_length,
+            overwrite_cache=data_args.overwrite_cache,
+            mode=Split.dev,
+        )
+
+        train_dataset = TokenClassificationDataset(
+            token_classification_task=token_classification_task,
+            data_dir=data_args.data_dir,
+            tokenizer=tokenizer,
+            labels=labels,
+            model_type=config.model_type,
+            max_seq_length=data_args.max_seq_length,
+            overwrite_cache=data_args.overwrite_cache,
+            mode=Split.train,
+        )
+
+        predictions_test, label_ids_test, metrics_test = trainer.predict(test_dataset)
+        predictions_list_test, _ = align_predictions(predictions_test, label_ids_test)
+        print("test: ", predictions_list_test)
 
         output_test_results_file = os.path.join(training_args.output_dir, "test_results.txt")
         if trainer.is_world_process_zero():
             with open(output_test_results_file, "w") as writer:
                 logger.info("***** Test results *****")
-                for key, value in metrics.items():
+                for key, value in metrics_test.items():
                     logger.info("  %s = %s", key, value)
                     writer.write("%s = %s\n" % (key, value))
 
-        # Save predictions
+        predictions_dev, label_ids_dev, metrics_dev = trainer.predict(dev_dataset)
+        predictions_list_dev, _ = align_predictions(predictions_dev, label_ids_dev)
+        print("dev: ", predictions_list_dev)
+
+        output_test_results_file = os.path.join(training_args.output_dir, "dev_results.txt")
+        if trainer.is_world_process_zero():
+            with open(output_test_results_file, "w") as writer:
+                logger.info("***** Dev results *****")
+                for key, value in metrics_dev.items():
+                    logger.info("  %s = %s", key, value)
+                    writer.write("%s = %s\n" % (key, value))
+
+        predictions_train, label_ids_train, metrics_train = trainer.predict(train_dataset)
+        predictions_list_train, _ = align_predictions(predictions_train, label_ids_train)
+        print("train: ", predictions_list_train)
+
+        output_test_results_file = os.path.join(training_args.output_dir, "train_results.txt")
+        if trainer.is_world_process_zero():
+            with open(output_test_results_file, "w") as writer:
+                logger.info("***** Train results *****")
+                for key, value in metrics_train.items():
+                    logger.info("  %s = %s", key, value)
+                    writer.write("%s = %s\n" % (key, value))
+
+        # Save test predictions
         output_test_predictions_file = os.path.join(training_args.output_dir, "test_predictions.txt")
         if trainer.is_world_process_zero():
             with open(output_test_predictions_file, "w") as writer:
                 with open(os.path.join(data_args.data_dir, "it_isdt-ud-test.txt"), "r") as f:
-                    token_classification_task.write_predictions_to_file(writer, f, predictions_list)
+                    token_classification_task.write_predictions_to_file(writer, f, predictions_list_test)
+
+        # Save dev predictions
+        output_test_predictions_file = os.path.join(training_args.output_dir, "dev_predictions.txt")
+        if trainer.is_world_process_zero():
+            with open(output_test_predictions_file, "w") as writer:
+                with open(os.path.join(data_args.data_dir, "it_isdt-ud-dev.txt"), "r") as f:
+                    token_classification_task.write_predictions_to_file(writer, f, predictions_list_dev)
+
+        # Save train predictions
+        output_test_predictions_file = os.path.join(training_args.output_dir, "train_predictions.txt")
+        if trainer.is_world_process_zero():
+            with open(output_test_predictions_file, "w") as writer:
+                with open(os.path.join(data_args.data_dir, "it_isdt-ud-train.txt"), "r") as f:
+                    token_classification_task.write_predictions_to_file(writer, f, predictions_list_train)
 
     return results
 
