@@ -44,8 +44,8 @@ def compute_conllu_metrics(args):
     """
     metrics_dict = {"las": 0, "uas": 0, "label_acc": 0, "total": 0, "punct": 0, "sym": 0, "<unk>": 0}
     try:
-        with open(os.path.join(args.results_path, "test_predictions_" + args.task_type[0] + ".txt")) as f1_deprel, \
-                open(os.path.join(args.results_path, "test_predictions_" + args.task_type[1] + ".txt")) as f2_relpos:
+        with open(os.path.join(args.results_path, args.set + "_predictions_" + args.task_type[0] + ".txt")) as f1_deprel, \
+                open(os.path.join(args.results_path, args.set + "_predictions_" + args.task_type[1] + ".txt")) as f2_relpos:
             while True:
                 line_deprel_file = f1_deprel.readline()
                 line_relpos_file = f2_relpos.readline()
@@ -155,6 +155,8 @@ def main():
                         help="consider symbols in the evaluation")
     parser.add_argument("--details", default=False, action="store_true",
                         help="to print detailed results")
+    parser.add_argument("--set", type=str, default="test",
+                        help="set the set type (e.g. test set or dev set)")
     args = parser.parse_args()
     print(args)
 

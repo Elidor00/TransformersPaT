@@ -38,10 +38,11 @@ from transformers import (
     TrainingArguments,
     set_seed,
     PreTrainedModel,
-    DataCollator
+    DataCollator,
+    PreTrainedTokenizerBase
 )
 from transformers.trainer_callback import TrainerCallback, EarlyStoppingCallback
-from transformers.optimization import AdamW, get_linear_schedule_with_warmup, Adafactor
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
 from utils_ner import Split, TokenClassificationDataset, TokenClassificationTask
 
@@ -431,13 +432,6 @@ def main():
             with open(output_test_predictions_file, "w") as writer:
                 with open(os.path.join(data_args.data_dir, "it_isdt-ud-dev.txt"), "r") as f:
                     token_classification_task.write_predictions_to_file(writer, f, predictions_list_dev)
-
-        # Save train predictions
-        output_test_predictions_file = os.path.join(training_args.output_dir, "train_predictions.txt")
-        if trainer.is_world_process_zero():
-            with open(output_test_predictions_file, "w") as writer:
-                with open(os.path.join(data_args.data_dir, "it_isdt-ud-train.txt"), "r") as f:
-                    token_classification_task.write_predictions_to_file(writer, f, predictions_list_train)
 
     return results
 
