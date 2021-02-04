@@ -143,3 +143,4 @@ it_isdt-ud-*.txt
 # results folders
 results*
 test*
+dev*
