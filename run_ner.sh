@@ -18,9 +18,9 @@ if [ -e "$TRAIN_FILE" ] && [ -e "$DEV_FILE" ] && [ -e "$TEST_FILE" ]
 then
     echo "Found dataset"
 else
-    if [ -e UD2.6_it.zip ]
+    if [ -e data/UD2.6_it.zip ]
     then
-        unzip UD2.6_it.zip -d .
+        unzip data/UD2.6_it.zip -d .
         for FILE in *
         do
             if [[ "$FILE" == *.conllu ]]

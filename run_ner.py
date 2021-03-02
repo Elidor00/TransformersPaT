@@ -149,7 +149,8 @@ class MyTrainer(Trainer):
             self.lr_scheduler = get_linear_schedule_with_warmup(
                 self.optimizer, num_warmup_steps=0.06,
                 num_training_steps=self.get_num_training_steps()
-                # int(len(self.get_train_dataloader()) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
+                # int(len(self.get_train_dataloader()) //
+                # self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             )
 
     def get_optimizers(self) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
@@ -248,6 +249,10 @@ def main():
         cache_dir=model_args.cache_dir,
     )
 
+    def count_parameters(m):
+        params = sum(p.numel() for p in m.parameters() if p.requires_grad)
+        logger.info("Number of total trainable parameters: %s", params)
+
     def check_req_grad(m):
         for name, param in m.named_parameters():
             logger.info(str(name) + " " + str(param.requires_grad))
@@ -261,13 +266,7 @@ def main():
 
     check_req_grad(model)
 
-    # for n, p in model.named_parameters():
-    #     if n == "classifier.weight" or n == "classifier.bias":
-    #         p.requires_grad = True
-    #     else:
-    #         p.requires_grad = False
-    #
-    # check_req_grad(model)
+    count_parameters(model)
 
     # Get datasets
     train_dataset = (
@@ -359,7 +358,8 @@ def main():
                     writer.write(f"{key} = {value}\n")
 
             # Save tokenizer
-            # tokenizer.save_pretrained(training_args.output_dir)
+            tokenizer.save_pretrained(training_args.output_dir)
+            tokenizer.save_vocabulary(save_directory=training_args.output_dir)
 
     # Evaluation
     results = {}
@@ -393,7 +393,7 @@ def main():
 
         predictions_test, label_ids_test, metrics_test = trainer.predict(test_dataset)
         predictions_list_test, _ = align_predictions(predictions_test, label_ids_test)
-        print("pred list test: ", predictions_list_test)
+        # print("pred list test: ", predictions_list_test)
 
         output_test_results_file = os.path.join(training_args.output_dir, "test_results.txt")
         if trainer.is_world_process_zero():
@@ -405,11 +405,11 @@ def main():
 
         predictions_dev, label_ids_dev, metrics_dev = trainer.predict(eval_dataset)
         predictions_list_dev, _ = align_predictions(predictions_dev, label_ids_dev)
-        print("pred list dev: ", predictions_list_dev)
+        # print("pred list dev: ", predictions_list_dev)
 
         predictions_train, label_ids_train, metrics_train = trainer.predict(train_dataset)
         predictions_list_train, _ = align_predictions(predictions_train, label_ids_train)
-        print("pred list train: ", predictions_list_train)
+        # print("pred list train: ", predictions_list_train)
 
         output_test_results_file = os.path.join(training_args.output_dir, "train_results.txt")
         if trainer.is_world_process_zero():
