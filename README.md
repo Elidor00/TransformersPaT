@@ -33,7 +33,7 @@ The variables are:
 
 ```
 export MAX_LENGTH=200
-export BERT_MODEL=bert-base-uncased
+export BERT_MODEL=Musixmatch/umberto-wikipedia-uncased-v1
 export OUTPUT_DIR=transformers-pat-model
 export BATCH_SIZE=32
 export NUM_EPOCHS=3
@@ -49,20 +49,26 @@ The script parameters are:
 
 ```
 python3 run_ner.py \
---task_type POS \
+--task_type DEPREL \
 --data_dir . \
 --model_name_or_path $BERT_MODEL \
 --output_dir $OUTPUT_DIR \
 --max_seq_length  $MAX_LENGTH \
 --num_train_epochs $NUM_EPOCHS \
---per_gpu_train_batch_size $BATCH_SIZE \
+--per_device_train_batch_size $BATCH_SIZE \
 --save_steps $SAVE_STEPS \
 --seed $SEED \
+--load_best_model_at_end \
+--evaluation_strategy epoch \
+--metric_for_best_model eval_loss \
+--disable_tqdm False \
+--save_total_limit 1 \
 --do_train \
 --do_eval \
 --do_predict
-
 ```
+
+By default, *early stopping* is set (on the *dev set*) for training, using the *eval_loss* metric.
 
 ### Tasks Results
 #### Bert_model: bert-base-uncased
@@ -72,7 +78,7 @@ python3 run_ner.py \
   
   #### task_type: POS (PoS-tagging)
 
-##### Eval results 
+##### Dev results 
 ```
 eval_loss = 0.12940883628604277
 eval_accuracy_score = 0.9644776620759153
@@ -93,7 +99,7 @@ eval_f1 = 0.964663425392211
 
 #### task_type: DEPREL (Universal Dependency Relations)
 
-##### Eval results 
+##### Dev results 
 ```
 eval_loss = 0.2954632102603644
 eval_accuracy_score = 0.9126637554585153
@@ -114,7 +120,7 @@ eval_f1 = 0.9165445128505815
 
 #### task_type: RELPOS (Relative Position between head and id)
 
-##### Eval results 
+##### Dev results 
 ```
 eval_loss = 0.7067813938352424
 eval_accuracy_score = 0.7946758481692979
@@ -153,69 +159,69 @@ punct = 1162
   
 #### task_type: DEPREL (Universal Dependency Relations)
 
-##### Eval results 
+##### Dev results 
 ```
-eval_loss = 0.3033303979416968
-eval_accuracy_score = 0.9387806516627477
-eval_precision = 0.9369160881117682
-eval_recall = 0.9338744126441691
-eval_f1 = 0.9353927776826972
-epoch = 3.0
+eval_loss = 0.1996578574180603
+eval_accuracy_score = 0.9547363117232113
+eval_precision = 0.9531958586463593
+eval_recall = 0.9517300299017514
+eval_f1 = 0.9524623803009576
+epoch = 7.0
 ```
 
 ##### Test results
 ```
-eval_loss = 0.26721003541692356
-eval_accuracy_score = 0.9451857540558702
-eval_precision = 0.9435586422772181
-eval_recall = 0.9412568306010929
-eval_f1 = 0.942406330907137
+eval_loss = 0.16917972266674042
+eval_accuracy_score = 0.9584333301334357
+eval_precision = 0.9574780058651027
+eval_recall = 0.9557962529274004
+eval_f1 = 0.9566363902724876
 ```
 
 #### task_type: RELPOS (Relative Position between head and id)
 
-##### Eval results 
+##### Dev results 
 ```
-eval_loss = 0.7107215431374563
-eval_accuracy_score = 0.824319785018475
-eval_precision = 0.8124152886961236
-eval_recall = 0.8057173581862174
-eval_f1 = 0.8090524610816161
-epoch = 3.0
+eval_loss = 0.45070308446884155
+eval_accuracy_score = 0.8899059455828014
+eval_precision = 0.8824270795822831
+eval_recall = 0.8783941213370373
+eval_f1 = 0.8804059819463781
+epoch = 10.0
 ```
 
 ##### Test results
 ```
-eval_loss = 0.6347696009229441
-eval_accuracy_score = 0.8358452529519056
-eval_precision = 0.8251546391752578
-eval_recall = 0.8162349581888639
-eval_f1 = 0.8206705629037219
+eval_loss = 0.37038251757621765
+eval_accuracy_score = 0.8948833637323605
+eval_precision = 0.8859307802580381
+eval_recall = 0.8825869631745384
+eval_f1 = 0.8842557105626245
 ```
 
 #### Evaluation of DEPREL and RELPOS together
-Evaluation done through the script ```compute_conllu_metrics.py```
+Evaluation done through the script ```compute_conllu_metrics.py``` without consider ```punctuation marks``` and ```symbols``` - **dev set**
 ```
-Considered punct:  True
-Considered sym:  True
-las =  81.62618796198522 %
-uas (relpos) =  85.02447921666507 %
-label accuracy score (deprel) =  94.51857540558703 %
-total = 10417
-punct = 1175
-sym = 5
+Considered punct: False
+Considered sym: False
+las = 89.09 %
+uas = 91.99 %
+label_acc = 94.91 %
+punct = 0
+sym = 0
+<unk> = 12
 ```
 
-Evaluation done through the script ```compute_conllu_metrics.py``` without consider ```punctuation marks``` and ```symbols```
+Evaluation done through the script ```compute_conllu_metrics.py``` without consider ```punctuation marks``` and ```symbols``` - **test set**
 ```
-Considered punct:  False
-Considered sym:  False
-las =  85.34156111291546 %
-uas (relpos) =  89.08736602793115 %
-label accuracy score (deprel) =  93.99155569990256 %
-total = 9237
+Considered punct: False
+Considered sym: False
+las = 89.31 %
+uas = 92.05 %
+label_acc = 95.36 %
 punct = 0
-sym = 0 
+sym = 0
+<unk> = 18
 ```
 </details>
 
@@ -225,3 +231,10 @@ When running the evaluation script ```compute_conllu_metrics.py``` you can speci
 
 Example of use:
     ```python compute_conllu_metrics_parsing.py results/ --task_type DEPREL RELPOS --consider_punct --consider_sym --details```
+
+### Results of 10 training instances
+|     |    Dev set     |    Test set     |
+|-----|----------------|-----------------|
+| LAS |  88.79% ± 0.31 |  89.17% ± 0.25  |
+| UAS |  91.66% ± 0.31 |  91.91% ± 0.29  |
+| LA  |  94.89% ± 0.10 |  95.28% ± 0.13  |
