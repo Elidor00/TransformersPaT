@@ -238,3 +238,6 @@ Example of use:
 | LAS |  88.79% ± 0.31 |  89.17% ± 0.25  |
 | UAS |  91.66% ± 0.31 |  91.91% ± 0.29  |
 | LA  |  94.89% ± 0.10 |  95.28% ± 0.13  |
+
+#### Disclaimer
+For a more complete discussion of the results, please refer to this [document](https://amslaurea.unibo.it/22898/) (available only in Italian).
